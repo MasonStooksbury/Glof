@@ -1,5 +1,7 @@
 import { Component, ViewChild, ElementRef, OnInit } from '@angular/core';
 import io from "socket.io-client";
+import { GameService } from './services/game/game.service';
+import { SocketService } from './services/socket/socket.service';
 
 @Component({
 	selector: 'app-root',
@@ -14,8 +16,10 @@ export class AppComponent implements OnInit {
 	private context: any;
 	private socket: any;
 
+	constructor(private gameService: GameService, private socketService: SocketService) { }
+
 	public ngOnInit() {
-		this.socket = io("http://localhost:3000");
+		this.socket = io("http://localhost:709");
 	}
 
 	public ngAfterViewInit() {

@@ -2,8 +2,8 @@ const Express = require("express")();
 const Http = require("http").Server(Express);
 const Socketio = require("socket.io")(Http);
 
-Http.listen(3000, () => {
-    console.log("Listening at :3000...");
+Http.listen(709, () => {
+    console.log("Listening at :709...");
 });
 
 var position = {
@@ -13,6 +13,7 @@ var position = {
 
 Socketio.on("connection", socket => {
     socket.emit("position", position);
+
     socket.on("move", data => {
         switch(data) {
             case "left":
@@ -38,3 +39,5 @@ Socketio.on("connection", socket => {
 // Key difference between socket.emit() and Socketio.emit():
 //      - socket.emit()     = Only one socket will receive the message
 //      - Socketio.emit()   = ALL connected sockets will receive the message
+
+// socket.broadcast.emit()   = Goes to everyone but the sender
