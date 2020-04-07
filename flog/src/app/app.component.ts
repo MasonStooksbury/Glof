@@ -16,10 +16,12 @@ export class AppComponent implements OnInit {
 	private context: any;
 	private socket: any;
 
+	message = '';
+
 	constructor(private gameService: GameService, private socketService: SocketService) { }
 
 	public ngOnInit() {
-		this.socket = io("http://localhost:709");
+		this.socket = io("http://localhost:709/flog");
 	}
 
 	public ngAfterViewInit() {
@@ -28,6 +30,9 @@ export class AppComponent implements OnInit {
 			this.context.clearRect(0, 0, this.gameCanvas.nativeElement.width, this.gameCanvas.nativeElement.height);
 			this.context.fillRect(data.x, data.y, 20, 20);
 		});
+		this.socket.on('greet', data => {
+			this.message = data;
+		})
 	}
 
 	public move(direction: string) {

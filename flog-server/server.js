@@ -11,8 +11,9 @@ var position = {
     y: 200
 };
 
-Socketio.on("connection", socket => {
+Socketio.of('/flog').on("connection", (socket) => {
     socket.emit("position", position);
+    socket.emit("greet", 'Welcome to the Flog!')
 
     socket.on("move", data => {
         switch(data) {
@@ -40,4 +41,4 @@ Socketio.on("connection", socket => {
 //      - socket.emit()     = Only one socket will receive the message
 //      - Socketio.emit()   = ALL connected sockets will receive the message
 
-// socket.broadcast.emit()   = Goes to everyone but the sender
+// socket.broadcast.emit()  = Goes to everyone but the sender
