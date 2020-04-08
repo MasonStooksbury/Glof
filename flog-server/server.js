@@ -11,30 +11,42 @@ var position = {
     y: 200
 };
 
+var player1 = '';
+var player2 = '';
+
+// To make this easy, this will be in reference to player1
+// i.e.  "true" if it is player 1's turn, "false" if not
+var turn = true;
+
 Socketio.of('/flog').on("connection", (socket) => {
     socket.emit("position", position);
-    socket.emit("greet", 'Welcome to the Flog!')
+    socket.emit("greet", `Welcome to Flog, ${socket.id}!`)
+    if (player1 === '') {
+        player1 = socket.id;
+    } else {
+        player2 = socket.id;
+    }
+});
 
-    socket.on("move", data => {
-        switch(data) {
-            case "left":
-                position.x -= 10;
-                Socketio.emit("position", position);
-                break;
-            case "right":
-                position.x += 10;
-                Socketio.emit("position", position);
-                break;
-            case "up":
-                position.y -= 10;
-                Socketio.emit("position", position);
-                break;
-            case "down":
-                position.y += 10;
-                Socketio.emit("position", position);
-                break;
-        }
-    });
+Socketio.of('/flog').on("move", data => {
+    switch(data) {
+        case "left":
+            position.x -= 10;
+            Socketio.emit("position", position);
+            break;
+        case "right":
+            position.x += 10;
+            Socketio.emit("position", position);
+            break;
+        case "up":
+            position.y -= 10;
+            Socketio.emit("position", position);
+            break;
+        case "down":
+            position.y += 10;
+            Socketio.emit("position", position);
+            break;
+    }
 });
 
 // Key difference between socket.emit() and Socketio.emit():
