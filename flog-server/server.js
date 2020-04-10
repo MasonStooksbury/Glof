@@ -31,50 +31,42 @@ Socketio.on("connection", (socket) => {
 
 
     socket.on("move", data => {
-        console.log('in move');
-        console.log(`turn: ${turn}`);
-        console.log(`other thing: ${socket.id === player1}`);
-        console.log(`player id: ${socket.id}`);
-        if (turn && socket.id === player1) {
-            console.log('player1 turn');
-            // Once player has discarded or replaced, they are done
-            turn = false;
-        } else if (!turn && socket.id === player2) {
-            console.log('player2 turn');
-            turn = true;
-        }
-
-        console.log(data);
-        switch(data) {
-            case "left":
-                position.x -= 10;
-                Socketio.emit("position", position);
-                break;
-            case "right":
-                position.x += 10;
-                Socketio.emit("position", position);
-                break;
-            case "up":
-                position.y -= 10;
-                Socketio.emit("position", position);
-                break;
-            case "down":
-                position.y += 10;
-                Socketio.emit("position", position);
-                break;
+        if (turn && socket.id === player1 || !turn && socket.id === player2) {
+            switch(data) {
+                case "left":
+                    position.x -= 10;
+                    Socketio.emit("position", position);
+                    break;
+                case "right":
+                    position.x += 10;
+                    Socketio.emit("position", position);
+                    break;
+                case "up":
+                    position.y -= 10;
+                    Socketio.emit("position", position);
+                    break;
+                case "down":
+                    if (turn && socket.id === player1) {
+                        turn = false;
+                    } else if (!turn && socket.id === player2) {
+                        turn = true;
+                    }
+                    break;
+            }
         }
     });
 
     
-    Socketio.on("disconnect", (socket) => {
+    socket.on("disconnect", function() {
         // If player1 leaves, promote player2 and free up his spot
         if (socket.id === player1) {
             player1 = player2;
+            console.log('Player2 was promoted to Player1!');
+            socket.emit("greet", `Player2 was promoted to Player1!`)
         }
         // Otherwise, just free up player2's spot
         player2 = '';
-        socket.emit('Player2 was promoted to Player1!');
-        socket.emit("greet", `Welcome to Flog, ${socket.id}!`)
+        // socket.emit("greet", `Welcome to Flog, ${socket.id}!`)
     });
 });
 
