@@ -1,8 +1,13 @@
-<canvas #game width="640" height="480" style="border: 1px solid black"></canvas>
+<canvas #game width='640' height='480' style='border: 1px solid black'></canvas>
 <p>
-	<button (click)="move('right')">Right</button>
-	<button (click)="move('left')">Left</button>
-	<button (click)="move('up')">Up</button>
-	<button (click)="move('down')">Down</button>
+	<button (click)='move("right")'>Right</button>
+	<button (click)='move("left")'>Left</button>
+	<button (click)='move("up")'>Up</button>
+	<button (click)='move("down")'>Down</button>
 </p>
 <span>{{message}}</span>
+
+<!-- A dialog of whether they won or lost -->
+<p-dialog [(visible)]='showWinStatusDialog' [modal]='true'>
+	<span>{{winStatusMessage}}</span>
+</p-dialog>

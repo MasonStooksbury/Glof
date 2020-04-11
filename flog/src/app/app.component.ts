@@ -8,14 +8,15 @@ import { GameService } from './services/game/game.service';
 	styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
-
 	@ViewChild("game", {static: false})
-	private gameCanvas: ElementRef;
 
-	private context: any;
-	private socket: any;
+	gameCanvas: ElementRef;
+	context: any;
+	socket: any;
 
 	message = '';
+	winStatusMessage = '';
+	showWinStatusDialog = false;
 
 	constructor(private gameService: GameService) { }
 
@@ -31,6 +32,11 @@ export class AppComponent implements OnInit {
 		});
 		this.socket.on('greet', data => {
 			this.message = data;
+		})
+		this.socket.on('winStatus', data => {
+			console.log('winStatus');
+			this.showWinStatusDialog = true;
+			this.winStatusMessage = data;
 		})
 	}
 
