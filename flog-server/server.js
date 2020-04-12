@@ -13,6 +13,7 @@ var position = {
 
 var player1 = '';
 var player2 = '';
+var players = 0;
 
 // To make this easy, this will be in reference to player1
 // i.e.  'true' if it is player 1's turn, 'false' if not
@@ -20,17 +21,20 @@ var turn = true;
 
 Socketio.on('connection', (socket) => {
     socket.emit('position', position);
-    socket.emit('greet', `Welcome to Flog, ${socket.id}!`)
     if (player1 === '') {
         player1 = socket.id;
         console.log(`player 1 id: ${socket.id}`);
+        socket.emit('greet', {message: 'Welcome to Flog! You are Player 1', player_id: '1'})
     } else {
         player2 = socket.id;
         console.log(`player 2 id: ${socket.id}`);
+        socket.emit('greet', {message: 'Welcome to Flog! You are Player 2', player_id: '2'})
     }
+    ++players;
 
 
     socket.on('move', data => {
+        // Only allow players to do things on their turn
         if (turn && socket.id === player1 || !turn && socket.id === player2) {
             switch(data) {
                 case 'left':
@@ -45,6 +49,7 @@ Socketio.on('connection', (socket) => {
                     position.y -= 10;
                     Socketio.emit('position', position);
                     break;
+                // When they player is done with their turn, flip the turn boolean
                 case 'down':
                     if (turn && socket.id === player1) {
                         turn = false;
@@ -55,28 +60,38 @@ Socketio.on('connection', (socket) => {
             }
             console.log(position.x);
             console.log(position.y);
+            // Win-condition
             if (position.x === 150 && position.y === 150) {
-                console.log('in here????????');
-                socket.emit('winStatus', 'You won! :D')
-                socket.broadcast.emit('winStatus', 'You lost :(')
+                winningPlayer = socket.id === player1 ? '1' : '2';
+
+                socket.emit('winStatus', {message: 'You won! :D', winningPlayer: winningPlayer})
+                socket.broadcast.emit('winStatus', {message: 'You lost :(', winningPlayer: winningPlayer})
 			}
         }
     });
 
     
     socket.on('disconnect', function() {
-        // If player1 leaves, promote player2 and free up his spot
-        if (socket.id === player1) {
-            player1 = player2;
-            console.log('Player2 was promoted to Player1!');
-            socket.broadcast.emit('greet', `Player2 was promoted to Player1!`)
+        // Decrement the number of players as they leave
+        --players;
+        // If there are no more players, reset everything for when they join next time
+        if (players === 0) {
+            reset(resetPlayers=true);
         }
-        // Otherwise, just free up player2's spot
-        player2 = '';
-
-        // socket.emit('greet', `Welcome to Flog, ${socket.id}!`)
     });
 });
+
+
+// Prepare everything for the next game
+function reset(resetPlayers=false) {
+    if (resetPlayers) {
+        player1 = '';
+        player2 = '';
+    }
+    position.x = 200;
+    position.y = 200;
+    turn = true;
+}
 
 
 // Key difference between socket.emit() and Socketio.emit():

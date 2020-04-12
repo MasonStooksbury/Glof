@@ -1,4 +1,5 @@
-<canvas #game width='640' height='480' style='border: 1px solid black'></canvas>
+<canvas width='640' height='480' style='border: 1px solid black'></canvas>
+<h3>Welcome, Player {{player_id}}!</h3>
 <p>
 	<button (click)='move("right")'>Right</button>
 	<button (click)='move("left")'>Left</button>
@@ -8,6 +9,7 @@
 <span>{{message}}</span>
 
 <!-- A dialog of whether they won or lost -->
-<p-dialog header='Flog' [visible]='showWinStatusDialog' [modal]='true' [blockScroll]='true' styleClass='dialog'>
-	<span>{{winStatusMessage}}</span>
+<p-dialog header='Player {{winningPlayer}} won!' [closable]='false' [visible]='showWinStatusDialog' [modal]='true' [blockScroll]='true'>
+	<h3>{{winStatusMessage}}</h3>
+	<!-- <p-button></p-button> -->
 </p-dialog>

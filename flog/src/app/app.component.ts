@@ -15,7 +15,9 @@ export class AppComponent implements OnInit {
 	socket: any;
 
 	message = '';
+	player_id = '';
 	winStatusMessage = '';
+	winningPlayer = '';
 	showWinStatusDialog = false;
 
 	constructor(private gameService: GameService) { }
@@ -31,12 +33,14 @@ export class AppComponent implements OnInit {
 			this.context.fillRect(data.x, data.y, 20, 20);
 		});
 		this.socket.on('greet', data => {
-			this.message = data;
+			this.message = data.message;
+			this.player_id = data.player_id;
 		})
 		this.socket.on('winStatus', data => {
 			console.log('winStatus');
 			this.showWinStatusDialog = true;
-			this.winStatusMessage = data;
+			this.winStatusMessage = data.message;
+			this.winningPlayer = data.winningPlayer;
 		})
 	}
 
