@@ -1,26 +1,56 @@
-<!-- Main Menu -->
-<p-panel *ngIf='!startGame'>
-	<span>Welcome to the main menu, Player {{player_id}}!</span>
-	<span *ngIf='player_id === 1'>Feel free to start the game whenever.</span>
-	<span>Feel free to change your card theme and color!</span>
-	<span *ngIf='player_id === 2'>When you're done, press "I'm ready!" to let Player 1 know you're ready</span>
-	<button (click)='start()'>Start Game</button>
-</p-panel>
+<div class='row justify-content-center'>
+	<!-- Main Menu -->
+	<p-panel *ngIf='!startGame'>
+		<div class='row justify-content-center'>
+			<span>Welcome to the main menu, Player {{player_id}}!</span>
+			<span *ngIf='player_id === "1"'>Feel free to start the game whenever.</span>
+			<span>Feel free to change your card theme and color!</span>
+			<span *ngIf='player_id === "2"'>When you're done, press "I'm ready!" to let Player 1 know you're ready</span>
+			<button class='buffered-top' (click)='start()'>Start Game</button>
+		</div>
+	</p-panel>
 
 
 
-<!-- Game -->
-<p-panel *ngIf='startGame'>
-	<canvas width='640' height='480' style='border: 1px solid black'></canvas>
-	<h3>Welcome, Player {{player_id}}!</h3>
-	<p>
-		<button (click)='move("right")'>Right</button>
-		<button (click)='move("left")'>Left</button>
-		<button (click)='move("up")'>Up</button>
-		<button (click)='move("down")'>Down</button>
-	</p>
-	<span>{{message}}</span>
-</p-panel>
+	<!-- Game -->
+	<p-panel *ngIf='startGame'>
+		<div class='row justify-content-center'>
+			<h3>Welcome, Player {{player_id}}!</h3>
+			<p>
+				<button (click)='move("down")'>Down</button>
+			</p>
+			<span>{{message}}</span>
+
+
+			<div class="p-grid buffered-top">
+				<div class='p-col-12'>
+					<div class="p-grid">
+						<div class="p-col-4">
+							card 0
+						</div>
+						<div class="p-col-4">
+							card 1
+						</div>
+						<div class="p-col-4">
+							card 2
+						</div>
+					</div>
+					<div class="p-grid">
+						<div class="p-col-4">
+							card 3
+						</div>
+						<div class="p-col-4">
+							card 4
+						</div>
+						<div class="p-col-4">
+							card 5
+						</div>
+					</div>
+				</div>				
+			</div>
+		</div>
+	</p-panel>
+</div>
 
 
 

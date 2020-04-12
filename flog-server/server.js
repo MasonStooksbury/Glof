@@ -42,28 +42,15 @@ io.on('connection', (socket) => {
     socket.on('move', data => {
         // Only allow players to do things on their turn
         if (turn && socket.id === player1 || !turn && socket.id === player2) {
-            switch(data) {
-                case 'left':
-                    position.x -= 10;
-                    io.emit('position', position);
-                    break;
-                case 'right':
-                    position.x += 10;
-                    io.emit('position', position);
-                    break;
-                case 'up':
-                    position.y -= 10;
-                    io.emit('position', position);
-                    break;
-                // When they player is done with their turn, flip the turn boolean
-                case 'down':
-                    if (turn && socket.id === player1) {
-                        turn = false;
-                    } else if (!turn && socket.id === player2) {
-                        turn = true;
-                    }
-                    break;
+            // When they player is done with their turn, flip the turn boolean
+            if (data === 'down'){
+                if (turn && socket.id === player1) {
+                    turn = false;
+                } else if (!turn && socket.id === player2) {
+                    turn = true;
+                }
             }
+
             console.log(position.x);
             console.log(position.y);
             // Win-condition

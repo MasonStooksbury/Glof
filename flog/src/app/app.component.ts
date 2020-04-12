@@ -1,5 +1,6 @@
 import { Component, ViewChild, ElementRef, OnInit } from '@angular/core';
 import io from 'socket.io-client';
+import "primeflex/primeflex.css";
 import { GameService } from './services/game/game.service';
 
 @Component({
@@ -7,12 +8,9 @@ import { GameService } from './services/game/game.service';
 	templateUrl: './app.component.html',
 	styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit {
-	@ViewChild('game', {static: false})
-	
+export class AppComponent implements OnInit {	
 	context: any;
 	socket: any;
-	gameCanvas: ElementRef;
 
 	startGame = false;
 
@@ -41,14 +39,7 @@ export class AppComponent implements OnInit {
 		})
 		this.socket.on('startGame', data => {
 			this.startGame = data;
-			this.context = this.gameCanvas.nativeElement.getContext('2d');
 		})
-		if (this.startGame) {
-			this.socket.on('position', data => {
-				this.context.clearRect(0, 0, this.gameCanvas.nativeElement.width, this.gameCanvas.nativeElement.height);
-				this.context.fillRect(data.x, data.y, 20, 20);
-			});
-		}
 	}
 
 	public move(direction: string) {
