@@ -57,7 +57,7 @@ Socketio.on('connection', (socket) => {
             console.log(position.y);
             if (position.x === 150 && position.y === 150) {
                 console.log('in here????????');
-                socket.to(socket.id).emit('winStatus', 'You won! :D')
+                socket.emit('winStatus', 'You won! :D')
                 socket.broadcast.emit('winStatus', 'You lost :(')
 			}
         }

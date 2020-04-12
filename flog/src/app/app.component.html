@@ -8,6 +8,6 @@
 <span>{{message}}</span>
 
 <!-- A dialog of whether they won or lost -->
-<p-dialog [(visible)]='showWinStatusDialog' [modal]='true'>
+<p-dialog header='Flog' [visible]='showWinStatusDialog' [modal]='true' [blockScroll]='true' styleClass='dialog'>
 	<span>{{winStatusMessage}}</span>
 </p-dialog>
