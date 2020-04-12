@@ -1,6 +1,6 @@
 const Express = require('express')();
 const Http = require('http').Server(Express);
-const Socketio = require('socket.io')(Http);
+const io = require('socket.io')(Http);
 
 Http.listen(709, () => {
     console.log('Listening at :709...');
@@ -19,7 +19,7 @@ var players = 0;
 // i.e.  'true' if it is player 1's turn, 'false' if not
 var turn = true;
 
-Socketio.on('connection', (socket) => {
+io.on('connection', (socket) => {
     socket.emit('position', position);
     if (player1 === '') {
         player1 = socket.id;
@@ -32,6 +32,12 @@ Socketio.on('connection', (socket) => {
     }
     ++players;
 
+    socket.on('startGame', function() {
+        // If everyone is here and Player 1 initiated the start, then start
+        if (players === 2 && socket.id === player1) {
+            io.emit('startGame', true);
+        }
+    })
 
     socket.on('move', data => {
         // Only allow players to do things on their turn
@@ -39,15 +45,15 @@ Socketio.on('connection', (socket) => {
             switch(data) {
                 case 'left':
                     position.x -= 10;
-                    Socketio.emit('position', position);
+                    io.emit('position', position);
                     break;
                 case 'right':
                     position.x += 10;
-                    Socketio.emit('position', position);
+                    io.emit('position', position);
                     break;
                 case 'up':
                     position.y -= 10;
-                    Socketio.emit('position', position);
+                    io.emit('position', position);
                     break;
                 // When they player is done with their turn, flip the turn boolean
                 case 'down':
@@ -94,8 +100,8 @@ function reset(resetPlayers=false) {
 }
 
 
-// Key difference between socket.emit() and Socketio.emit():
+// Key difference between socket.emit() and io.emit():
 //      - socket.emit()     = Only one socket will receive the message
-//      - Socketio.emit()   = ALL connected sockets will receive the message
+//      - io.emit()   = ALL connected sockets will receive the message
 
 // socket.broadcast.emit()  = Goes to everyone but the sender

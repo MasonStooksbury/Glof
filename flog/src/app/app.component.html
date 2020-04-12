@@ -1,15 +1,31 @@
-<canvas width='640' height='480' style='border: 1px solid black'></canvas>
-<h3>Welcome, Player {{player_id}}!</h3>
-<p>
-	<button (click)='move("right")'>Right</button>
-	<button (click)='move("left")'>Left</button>
-	<button (click)='move("up")'>Up</button>
-	<button (click)='move("down")'>Down</button>
-</p>
-<span>{{message}}</span>
+<!-- Main Menu -->
+<p-panel *ngIf='!startGame'>
+	<span>Welcome to the main menu, Player {{player_id}}!</span>
+	<span *ngIf='player_id === 1'>Feel free to start the game whenever.</span>
+	<span>Feel free to change your card theme and color!</span>
+	<span *ngIf='player_id === 2'>When you're done, press "I'm ready!" to let Player 1 know you're ready</span>
+	<button (click)='start()'>Start Game</button>
+</p-panel>
+
+
+
+<!-- Game -->
+<p-panel *ngIf='startGame'>
+	<canvas width='640' height='480' style='border: 1px solid black'></canvas>
+	<h3>Welcome, Player {{player_id}}!</h3>
+	<p>
+		<button (click)='move("right")'>Right</button>
+		<button (click)='move("left")'>Left</button>
+		<button (click)='move("up")'>Up</button>
+		<button (click)='move("down")'>Down</button>
+	</p>
+	<span>{{message}}</span>
+</p-panel>
+
+
 
 <!-- A dialog of whether they won or lost -->
-<p-dialog header='Player {{winningPlayer}} won!' [closable]='false' [visible]='showWinStatusDialog' [modal]='true' [blockScroll]='true'>
-	<h3>{{winStatusMessage}}</h3>
+<p-dialog header='{{winStatusMessage}}' [closable]='false' [visible]='showWinStatusDialog' [modal]='true' [blockScroll]='true'>
+	<!-- Insert meme here -->
 	<!-- <p-button></p-button> -->
 </p-dialog>
