@@ -11,42 +11,54 @@ var position = {
     y: 200
 };
 
-var player1 = '';
-var player2 = '';
+var player1 = {socketId: '', isReady: false};
+var player2 = {socketId: '', isReady: false}
 var players = 0;
+var player_array = [];
 
 // To make this easy, this will be in reference to player1
 // i.e.  'true' if it is player 1's turn, 'false' if not
 var turn = true;
 
+// Probably an architectural nightmare, but basically this gets changed all the time
+//      to whatever the current socket is. That way, I don't have to pass it to
+//      my socket wrapper methods
+socketReference = {};
+
 io.on('connection', (socket) => {
-    socket.emit('position', position);
-    if (player1 === '') {
-        player1 = socket.id;
+    socketReference = socket;
+
+    if (player1.socketId === '') {
+        player1.socketId = socket.id;
+        player_array.push(player1);
         console.log(`player 1 id: ${socket.id}`);
-        socket.emit('greet', {message: 'Welcome to Flog! You are Player 1', player_id: '1'})
+        toSender('connection', {message: 'Welcome to Flog! You are Player 1', player_id: '1'});
     } else {
-        player2 = socket.id;
+        player2.socketId = socket.id;
+        player_array.push(player2);
         console.log(`player 2 id: ${socket.id}`);
-        socket.emit('greet', {message: 'Welcome to Flog! You are Player 2', player_id: '2'})
+        toSender('connection', {message: 'Welcome to Flog! You are Player 2', player_id: '2'})
     }
     ++players;
 
-    socket.on('startGame', function() {
-        // If everyone is here and Player 1 initiated the start, then start
-        if (players === 2 && socket.id === player1) {
-            io.emit('startGame', true);
+    // This triggers whenever a player hits the ready up button.
+    //      Make sure the correct player gets readied up
+    socket.on('playerReadyUp', function() {
+        player_array.find(player => player.socketId === socket.id).isReady = true;
+
+        if (player1.isReady && player2.isReady) {
+            toEveryone('startGame', true);
         }
     })
 
     socket.on('move', data => {
         // Only allow players to do things on their turn
-        if (turn && socket.id === player1 || !turn && socket.id === player2) {
-            // When they player is done with their turn, flip the turn boolean
+        if (turn && socket.id === player1.socketId || !turn && socket.id === player2.socketId) {
+            // When the player is done with their turn, flip the turn boolean
             if (data === 'down'){
-                if (turn && socket.id === player1) {
+                if (turn && socket.id === player1.socketId) {
                     turn = false;
-                } else if (!turn && socket.id === player2) {
+                } else if (!turn && socket.id === player2.socketId) {
                     turn = true;
                 }
             }
@@ -55,10 +67,10 @@ io.on('connection', (socket) => {
             console.log(position.y);
             // Win-condition
             if (position.x === 150 && position.y === 150) {
-                winningPlayer = socket.id === player1 ? '1' : '2';
+                winningPlayer = socket.id === player1.socketId ? '1' : '2';
 
-                socket.emit('winStatus', {message: 'You won! :D', winningPlayer: winningPlayer})
-                socket.broadcast.emit('winStatus', {message: 'You lost :(', winningPlayer: winningPlayer})
+                toSender('winStatus', {message: 'You won! :D', winningPlayer: winningPlayer});
+                toAllButSender('winStatus', {message: 'You lost :(', winningPlayer: winningPlayer})
 			}
         }
     });
@@ -78,12 +90,28 @@ io.on('connection', (socket) => {
 // Prepare everything for the next game
 function reset(resetPlayers=false) {
     if (resetPlayers) {
-        player1 = '';
-        player2 = '';
+        player1.socketId = '';
+        player2.socketId = '';
     }
     position.x = 200;
     position.y = 200;
     turn = true;
+}
+
+
+// I realize they are simple commands, but I found myself not being able to quickly
+//      tell what was going on with these emissions. So I wrote obvious wrappers for
+//      all of the ones I use
+function toSender(method, data) {
+    socketReference.emit(method, data)
+}
+
+function toEveryone(method, data) {
+    io.emit(method, data);
+}
+
+function toAllButSender(method, data) {
+    socketReference.broadcast.emit(method, data)
 }
 
 

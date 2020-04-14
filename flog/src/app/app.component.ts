@@ -20,6 +20,8 @@ export class AppComponent implements OnInit {
 	winningPlayer = '';
 	showWinStatusDialog = false;
 
+	theme1 = 'assets/Test_Card_Smoller.png';
+
 	constructor(private gameService: GameService) { }
 
 	public ngOnInit() {
@@ -27,12 +29,11 @@ export class AppComponent implements OnInit {
 	}
 
 	public ngAfterViewInit() {
-		this.socket.on('greet', data => {
+		this.socket.on('connection', data => {
 			this.message = data.message;
 			this.player_id = data.player_id;
 		})
 		this.socket.on('winStatus', data => {
-			console.log('winStatus');
 			this.showWinStatusDialog = true;
 			this.winStatusMessage = data.message;
 			this.winningPlayer = data.winningPlayer;
@@ -40,13 +41,15 @@ export class AppComponent implements OnInit {
 		this.socket.on('startGame', data => {
 			this.startGame = data;
 		})
+		// Request card (should be dynamic)
+		// Receive card (should also be dynamic)
 	}
 
-	public move(direction: string) {
-		this.socket.emit('move', direction);
+	public turnMove(desiredMove: string) {
+		this.socket.emit('move', desiredMove);
 	}
 
-	public start() {
-		this.socket.emit('startGame');
+	public readyUp() {
+		this.socket.emit('playerReadyUp');
 	}
 }

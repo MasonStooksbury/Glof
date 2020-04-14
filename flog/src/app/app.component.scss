@@ -1,16 +1,21 @@
-.p-col-12 {
+.p-col-6 {
     border: 1px solid black;
     padding: 1em;
 }
 .p-col-3 {
-    border: 1px solid black;
+    padding: 0;
+    // border: 1px solid black;
     margin-top: 1em;
     &:hover {
-        border: 2px solid red;
+        border: 3px solid fuchsia;
     }
 }
 
 .middle-card {
     margin-left: 1em;
     margin-right: 1em;
+}
+
+.draw-pile {
+    margin-left: 3em;
 }
