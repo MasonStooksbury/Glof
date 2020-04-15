@@ -12,6 +12,8 @@ export class AppComponent implements OnInit {
 	context: any;
 	socket: any;
 
+	card_theme = 'assets/Test_Card_Smoller.png';
+
 	startGame = false;
 
 	message = '';
@@ -20,7 +22,14 @@ export class AppComponent implements OnInit {
 	winningPlayer = '';
 	showWinStatusDialog = false;
 
-	theme1 = 'assets/Test_Card_Smoller.png';
+	// Each card will start off as an empty string
+	my_cards = ['', '', '', '', '', ''];
+	their_cards = ['', '', '', '', '', ''];
+
+	canChooseCard = false;
+	canDraw = false;
+	canDiscard = false;
+
 
 	constructor(private gameService: GameService) { }
 
@@ -40,6 +49,21 @@ export class AppComponent implements OnInit {
 		})
 		this.socket.on('startGame', data => {
 			this.startGame = data;
+			// Once the game has started, allow the players to pick two cards
+			this.canChooseCard = data;
+		})
+		this.socket.on('startTurns', data => {
+			console.log('Let the games begin!');
+		})
+		this.socket.on('receiveCard', data => {
+			console.log('MY CARDS');
+			console.log(data);
+			// Get their cards
+		})
+		this.socket.on('receiveOtherCard', data => {
+			console.log('OTHER CARDS');
+			console.log(data);
+			// Get their cards
 		})
 		// Request card (should be dynamic)
 		// Receive card (should also be dynamic)
@@ -51,5 +75,28 @@ export class AppComponent implements OnInit {
 
 	public readyUp() {
 		this.socket.emit('playerReadyUp');
+	}
+
+	// This is only used during the Card-Choosing phase
+	public chooseCard(card: number) {
+		if (this.canChooseCard) {
+			this.socket.emit('chooseCard', card);
+		}
+	}
+
+	public requestCard() {
+		console.log('');
+	}
+
+	public drawCard() {
+		if (this.canDraw) {
+			console.log('Youre allowed to draw');
+		}
+	}
+
+	public discardCard() {
+		if (this.canDiscard) {
+			console.log('Youre allowed to discard');
+		}
 	}
 }

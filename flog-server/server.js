@@ -11,8 +11,8 @@ var position = {
     y: 200
 };
 
-var player1 = {socketId: '', isReady: false};
-var player2 = {socketId: '', isReady: false}
+var player1 = {socketId: '', isReady: false, chosenCards: 0, cards: ['HK', 'H3', 'HA', 'H2', 'H5', 'J']};
+var player2 = {socketId: '', isReady: false, chosenCards: 0, cards: ['SK', 'S6', 'S8', 'S10', 'SJ', 'SA']};
 var players = 0;
 var player_array = [];
 
@@ -28,6 +28,9 @@ socketReference = {};
 io.on('connection', (socket) => {
     socketReference = socket;
 
+    // TODO: Initialize game setup (shuffle and deal)
+
+    // Assign players as they connect
     if (player1.socketId === '') {
         player1.socketId = socket.id;
         player_array.push(player1);
@@ -42,7 +45,6 @@ io.on('connection', (socket) => {
     ++players;
 
     // This triggers whenever a player hits the ready up button.
-    //      Make sure the correct player gets readied up
     socket.on('playerReadyUp', function() {
         player_array.find(player => player.socketId === socket.id).isReady = true;
 
@@ -51,6 +53,30 @@ io.on('connection', (socket) => {
         }
     })
 
+    // TODO: Choose two cards
+    socket.on('chooseCard', index => {
+        players_cards = player_array.find(player => player.socketId === socket.id).chosenCards;
+        if (players_cards < 2) {
+            players_cards++;
+            console.log(`cards chosen: ${players_cards}`);
+            console.log(`socket: ${socket.id}`);
+            // TODO: Give player their card and other card to display
+            // Sent to wrong sender?
+            toSender('receiveCard', player_array.find(player => player.socketId === socket.id).cards[index]);
+        }
+
+        if (player1.chosenCards === 2 && player2.chosenCards === 2) {
+            // Send each player the other persons cards
+            toSpecificSocket({id: player1.socketId, method: 'receiveOtherCard', message: player2.cards});
+            toSpecificSocket({id: player2.socketId, method: 'receiveOtherCard', message: player1.cards});
+            // ^^^ TODO: Don't send the whole card array... Or maybe do, and fix it client side?
+            toEveryone('startTurns', true);
+        }
+    })
+
+    // TODO: Take turns until end
+
+    // This is where the logic for turn-taking happens
     socket.on('move', data => {
         // Only allow players to do things on their turn
         if (turn && socket.id === player1.socketId || !turn && socket.id === player2.socketId) {
@@ -74,6 +100,10 @@ io.on('connection', (socket) => {
 			}
         }
     });
+
+    // TODO: Trigger last turns
+    // TODO: Calculate scores
+    // TODO: Reset game (shuffle, deal, trigger start)
 
     
     socket.on('disconnect', function() {
@@ -111,7 +141,11 @@ function toEveryone(method, data) {
 }
 
 function toAllButSender(method, data) {
-    socketReference.broadcast.emit(method, data)
+    socketReference.broadcast.emit(method, data);
+}
+
+function toSpecificSocket(data) {
+    socket.broadcast.to(data.id).emit(data.method, data.message);
 }
 
 
