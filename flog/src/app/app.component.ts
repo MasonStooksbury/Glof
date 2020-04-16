@@ -56,9 +56,7 @@ export class AppComponent implements OnInit {
 			console.log('Let the games begin!');
 		})
 		this.socket.on('receiveCard', data => {
-			console.log('MY CARDS');
-			console.log(data);
-			// Get their cards
+			this.my_cards[data.index] = data.card;
 		})
 		this.socket.on('receiveOtherCard', data => {
 			console.log('OTHER CARDS');
@@ -79,7 +77,7 @@ export class AppComponent implements OnInit {
 
 	// This is only used during the Card-Choosing phase
 	public chooseCard(card: number) {
-		if (this.canChooseCard) {
+		if (this.canChooseCard && this.my_cards[card] === '') {
 			this.socket.emit('chooseCard', card);
 		}
 	}

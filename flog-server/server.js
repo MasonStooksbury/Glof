@@ -46,6 +46,7 @@ io.on('connection', (socket) => {
 
     // This triggers whenever a player hits the ready up button.
     socket.on('playerReadyUp', function() {
+        socketReference = socket;
         player_array.find(player => player.socketId === socket.id).isReady = true;
 
         if (player1.isReady && player2.isReady) {
@@ -55,14 +56,14 @@ io.on('connection', (socket) => {
 
     // TODO: Choose two cards
     socket.on('chooseCard', index => {
-        players_cards = player_array.find(player => player.socketId === socket.id).chosenCards;
-        if (players_cards < 2) {
-            players_cards++;
-            console.log(`cards chosen: ${players_cards}`);
-            console.log(`socket: ${socket.id}`);
-            // TODO: Give player their card and other card to display
-            // Sent to wrong sender?
-            toSender('receiveCard', player_array.find(player => player.socketId === socket.id).cards[index]);
+        socketReference = socket;
+        current_player = player_array.find(player => player.socketId === socket.id);
+
+        if (current_player.chosenCards < 2) {
+            current_player.chosenCards++;
+
+            // TODO: Give player their requested card
+            toSender('receiveCard', {card: current_player.cards[index], index: index});
         }
 
         if (player1.chosenCards === 2 && player2.chosenCards === 2) {
@@ -78,6 +79,7 @@ io.on('connection', (socket) => {
 
     // This is where the logic for turn-taking happens
     socket.on('move', data => {
+        socketReference = socket;
         // Only allow players to do things on their turn
         if (turn && socket.id === player1.socketId || !turn && socket.id === player2.socketId) {
             // When the player is done with their turn, flip the turn boolean
@@ -107,6 +109,7 @@ io.on('connection', (socket) => {
 
     
     socket.on('disconnect', function() {
+        socketReference = socket;
         // Decrement the number of players as they leave
         --players;
         // If there are no more players, reset everything for when they join next time
@@ -145,7 +148,7 @@ function toAllButSender(method, data) {
 }
 
 function toSpecificSocket(data) {
-    socket.broadcast.to(data.id).emit(data.method, data.message);
+    io.to(data.id).emit(data.method, data.message);
 }
 
 
