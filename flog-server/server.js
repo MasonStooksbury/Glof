@@ -11,8 +11,15 @@ var position = {
     y: 200
 };
 
-var player1 = {socketId: '', isReady: false, chosenCards: 0, cards: ['HK', 'H3', 'HA', 'H2', 'H5', 'J']};
-var player2 = {socketId: '', isReady: false, chosenCards: 0, cards: ['SK', 'S6', 'S8', 'S10', 'SJ', 'SA']};
+// var player1_cards = ['HK', 'H3', 'HA', 'H2', 'H5', 'J'];
+// var player2_cards = ['SK', 'S6', 'S8', 'S10', 'SJ', 'SA'];
+
+var draw_pile = ['SA', 'HK', 'J2'];
+var discard_pile = '';
+var top_of_draw_pile = '';
+
+var player1 = {socketId: '', isReady: false, chosenCards: 0, display_cards: ['', '', '', '', '', ''], cards: ['H9', 'H3', 'HA', 'H2', 'H5', 'J1']};
+var player2 = {socketId: '', isReady: false, chosenCards: 0, display_cards: ['', '', '', '', '', ''], cards: ['SK', 'S6', 'S8', 'S10', 'SJ', 'SA']};
 var players = 0;
 var player_array = [];
 
@@ -49,28 +56,36 @@ io.on('connection', (socket) => {
         socketReference = socket;
         player_array.find(player => player.socketId === socket.id).isReady = true;
 
+        // When both players are ready, start the main game and send the discard card
         if (player1.isReady && player2.isReady) {
-            toEveryone('startGame', true);
+            discard_pile = draw_pile.shift();
+            toEveryone('startGame', discard_pile);
         }
     })
 
-    // TODO: Choose two cards
+    // This is the beginning of the game where each player chooses two cards they want
+    //      to reveal
     socket.on('chooseCard', index => {
         socketReference = socket;
         current_player = player_array.find(player => player.socketId === socket.id);
 
         if (current_player.chosenCards < 2) {
+            // Increment the number of cards they've chosen
             current_player.chosenCards++;
 
-            // TODO: Give player their requested card
-            toSender('receiveCard', {card: current_player.cards[index], index: index});
+            // Fill their display deck with the card they chose
+            current_player.display_cards[index] = current_player.cards[index];
+
+            // Send them their choice so they can see it
+            toSender('receiveCard', {card: current_player.display_cards[index], index: index});
         }
 
         if (player1.chosenCards === 2 && player2.chosenCards === 2) {
-            // Send each player the other persons cards
-            toSpecificSocket({id: player1.socketId, method: 'receiveOtherCard', message: player2.cards});
-            toSpecificSocket({id: player2.socketId, method: 'receiveOtherCard', message: player1.cards});
-            // ^^^ TODO: Don't send the whole card array... Or maybe do, and fix it client side?
+            // Send each player the other person's cards
+            toSpecificSocket({id: player1.socketId, method: 'receiveOtherCards', message: player2.display_cards});
+            toSpecificSocket({id: player2.socketId, method: 'receiveOtherCards', message: player1.display_cards});
+
+            // End the choose-2 phase and begin the main game
             toEveryone('startTurns', true);
         }
     })
@@ -78,18 +93,50 @@ io.on('connection', (socket) => {
     // TODO: Take turns until end
 
     // This is where the logic for turn-taking happens
-    socket.on('move', data => {
+    socket.on('playerTurn', data => {
         socketReference = socket;
         // Only allow players to do things on their turn
         if (turn && socket.id === player1.socketId || !turn && socket.id === player2.socketId) {
-            // When the player is done with their turn, flip the turn boolean
-            if (data === 'down'){
+            if (data.action === 'drawFromDrawPile') {
+                console.log('card drawn');
+                top_of_draw_pile = draw_pile.shift()
+                toSender('receiveDrawCard', top_of_draw_pile);
+            } else if (data.action === 'replace') {
+                console.log('card replaced');
+                current_player = player_array.find(player => player.socketId === socket.id);
+
+                discard_pile = current_player.cards[data.data]
+                current_player.display_cards[data.data] = top_of_draw_pile;
+                current_player.cards[data.data] = top_of_draw_pile;
+
+                console.log(`discard pile: ${discard_pile}`);
+                console.log(`display cards: ${current_player.display_cards}`);
+                console.log(`cards: ${current_player.cards}`);
+
+                updateAllCards();
+                toEveryone('receiveDiscardCard', discard_pile);
+
                 if (turn && socket.id === player1.socketId) {
                     turn = false;
                 } else if (!turn && socket.id === player2.socketId) {
                     turn = true;
                 }
+            } else if (data.action === 'discard') {
+                console.log('card discarded');
+                discard_pile = top_of_draw_pile;
+                toEveryone('receiveDiscardCard', discard_pile);
             }
+            
+            
+            
+            // When the player is done with their turn, flip the turn boolean
+            // if (data === 'down'){
+            //     if (turn && socket.id === player1.socketId) {
+            //         turn = false;
+            //     } else if (!turn && socket.id === player2.socketId) {
+            //         turn = true;
+            //     }
+            // }
 
             console.log(position.x);
             console.log(position.y);
@@ -118,6 +165,16 @@ io.on('connection', (socket) => {
         }
     });
 });
+
+
+// Update all hands and display cards
+function updateAllCards() {
+    toSpecificSocket({id: player1.socketId, method: 'receiveOtherCards', message: player2.display_cards});
+    toSpecificSocket({id: player2.socketId, method: 'receiveOtherCards', message: player1.display_cards});
+
+    toSpecificSocket({id: player1.socketId, method: 'updateCards', message: player1.display_cards});
+    toSpecificSocket({id: player2.socketId, method: 'updateCards', message: player2.display_cards});
+}
 
 
 // Prepare everything for the next game

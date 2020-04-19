@@ -26,9 +26,16 @@ export class AppComponent implements OnInit {
 	my_cards = ['', '', '', '', '', ''];
 	their_cards = ['', '', '', '', '', ''];
 
-	canChooseCard = false;
-	canDraw = false;
-	canDiscard = false;
+	// Phase booleans
+	chooseTwoPhase = false;
+	turnsPhase = false;
+
+	// We have both to prevent drawing from and then discarding to the discard pile
+	cardDrawnFromDrawPile = false;
+	cardDrawnFromDiscardPile = false;
+
+	topDiscardCard = '';
+	topDrawCard = ''
 
 
 	constructor(private gameService: GameService) { }
@@ -48,23 +55,37 @@ export class AppComponent implements OnInit {
 			this.winningPlayer = data.winningPlayer;
 		})
 		this.socket.on('startGame', data => {
-			this.startGame = data;
+			this.startGame = true;
+			this.topDiscardCard = data;
 			// Once the game has started, allow the players to pick two cards
-			this.canChooseCard = data;
+			this.chooseTwoPhase = true;
 		})
 		this.socket.on('startTurns', data => {
-			console.log('Let the games begin!');
+			this.chooseTwoPhase = false;
+			this.turnsPhase = true;
 		})
 		this.socket.on('receiveCard', data => {
 			this.my_cards[data.index] = data.card;
 		})
-		this.socket.on('receiveOtherCard', data => {
-			console.log('OTHER CARDS');
-			console.log(data);
-			// Get their cards
+		this.socket.on('receiveOtherCards', data => {
+			// Set their display deck to what I got from the server
+			console.log(`OTHER: ${data}`);
+			this.their_cards = [...data];
 		})
-		// Request card (should be dynamic)
-		// Receive card (should also be dynamic)
+		this.socket.on('updateCards', data => {
+			this.my_cards = [...data];
+			console.log(`MINE: ${this.my_cards}`);
+		})
+		this.socket.on('receiveDrawCard', data => {
+			console.log(`draw card: ${data}`);
+			this.topDrawCard = data;
+		})
+		this.socket.on('receiveDiscardCard', data => {
+			console.log(`discard card: ${data}`);
+			this.topDiscardCard = data;
+			this.cardDrawnFromDiscardPile = false;
+			this.cardDrawnFromDrawPile = false;
+		})
 	}
 
 	public turnMove(desiredMove: string) {
@@ -76,25 +97,36 @@ export class AppComponent implements OnInit {
 	}
 
 	// This is only used during the Card-Choosing phase
-	public chooseCard(card: number) {
-		if (this.canChooseCard && this.my_cards[card] === '') {
-			this.socket.emit('chooseCard', card);
+	public chooseCard(cardIndex: number) {
+		if (this.chooseTwoPhase && this.my_cards[cardIndex] === '') {
+			this.socket.emit('chooseCard', cardIndex);
 		}
 	}
 
-	public requestCard() {
-		console.log('');
+	public drawCardFromDrawPile() {
+		if (this.turnsPhase && !this.cardDrawnFromDrawPile && !this.cardDrawnFromDiscardPile) {
+			this.socket.emit('playerTurn', {action: 'drawFromDrawPile'});
+			this.cardDrawnFromDrawPile = true;
+		}
 	}
 
-	public drawCard() {
-		if (this.canDraw) {
-			console.log('Youre allowed to draw');
+	public drawCardFromDiscardPile() {
+		if (this.turnsPhase && !this.cardDrawnFromDiscardPile && !this.cardDrawnFromDrawPile) {
+			this.socket.emit('playerTurn', 'draw');
+			this.cardDrawnFromDiscardPile = true;
 		}
 	}
 
 	public discardCard() {
-		if (this.canDiscard) {
-			console.log('Youre allowed to discard');
+		if (this.turnsPhase && this.cardDrawnFromDrawPile) {
+			this.socket.emit('playerTurn', {action: 'discard', data: this.topDrawCard});
+		}
+	}
+
+	public replaceCard(cardIndex: number) {
+		if (this.turnsPhase && this.cardDrawnFromDrawPile ||
+			this.turnsPhase && this.cardDrawnFromDiscardPile) {
+			this.socket.emit('playerTurn', {action: 'replace', data: cardIndex})
 		}
 	}
 }
