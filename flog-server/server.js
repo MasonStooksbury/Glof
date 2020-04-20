@@ -6,11 +6,6 @@ Http.listen(709, () => {
     console.log('Listening at :709...');
 });
 
-var position = {
-    x: 200,
-    y: 200
-};
-
 // var player1_cards = ['HK', 'H3', 'HA', 'H2', 'H5', 'J'];
 // var player2_cards = ['SK', 'S6', 'S8', 'S10', 'SJ', 'SA'];
 
@@ -18,8 +13,8 @@ var draw_pile = ['SA', 'HK', 'J2'];
 var discard_pile = '';
 var top_of_draw_pile = '';
 
-var player1 = {socketId: '', isReady: false, chosenCards: 0, display_cards: ['', '', '', '', '', ''], cards: ['H9', 'H3', 'HA', 'H2', 'H5', 'J1']};
-var player2 = {socketId: '', isReady: false, chosenCards: 0, display_cards: ['', '', '', '', '', ''], cards: ['SK', 'S6', 'S8', 'S10', 'SJ', 'SA']};
+var player1 = {socketId: '', isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', 'H3', '', '', 'H5', 'J1'], cards: ['H9', 'H3', 'HA', 'H2', 'H5', 'J1']};
+var player2 = {socketId: '', isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['SK', 'S6', 'S8', 'S10', 'SJ', 'SA']};
 var players = 0;
 var player_array = [];
 
@@ -97,14 +92,13 @@ io.on('connection', (socket) => {
         socketReference = socket;
         // Only allow players to do things on their turn
         if (turn && socket.id === player1.socketId || !turn && socket.id === player2.socketId) {
+            current_player = player_array.find(player => player.socketId === socket.id);
             if (data.action === 'drawFromDrawPile') {
                 console.log('card drawn');
                 top_of_draw_pile = draw_pile.shift()
                 toSender('receiveDrawCard', top_of_draw_pile);
             } else if (data.action === 'replace') {
                 console.log('card replaced');
-                current_player = player_array.find(player => player.socketId === socket.id);
-
                 discard_pile = current_player.cards[data.data]
                 current_player.display_cards[data.data] = top_of_draw_pile;
                 current_player.cards[data.data] = top_of_draw_pile;
@@ -116,15 +110,54 @@ io.on('connection', (socket) => {
                 updateAllCards();
                 toEveryone('receiveDiscardCard', discard_pile);
 
-                if (turn && socket.id === player1.socketId) {
-                    turn = false;
-                } else if (!turn && socket.id === player2.socketId) {
-                    turn = true;
+                if (current_player.isLastTurn) {
+                    endGame();
+                } else {
+                    if (!current_player.display_cards.includes('')) {
+                        player1.isLastTurn = true;
+                        player2.isLastTurn = true;
+                    }
+    
+                    if (turn && socket.id === player1.socketId) {
+                        turn = false;
+                        if (current_player.isLastTurn) {
+                            toSpecificSocket({id: player2.socketId, method: 'notifyLastTurn'});
+                        }
+                    } else if (!turn && socket.id === player2.socketId) {
+                        turn = true;
+                        if (current_player.isLastTurn) {
+                            toSpecificSocket({id: player1.socketId, method: 'notifyLastTurn'});
+                        }
+                    }
                 }
+
             } else if (data.action === 'discard') {
                 console.log('card discarded');
                 discard_pile = top_of_draw_pile;
                 toEveryone('receiveDiscardCard', discard_pile);
+
+                console.log(`final?: ${current_player.isLastTurn}`);
+                if (current_player.isLastTurn) {
+                    console.log('last turn?');
+                    endGame();
+                } else {
+                    if (!current_player.display_cards.includes('')) {
+                        player1.isLastTurn = true;
+                        player2.isLastTurn = true;
+                    }
+    
+                    if (turn && socket.id === player1.socketId) {
+                        turn = false;
+                        if (current_player.isLastTurn) {
+                            toSpecificSocket({id: player2.socketId, method: 'notifyLastTurn'});
+                        }
+                    } else if (!turn && socket.id === player2.socketId) {
+                        turn = true;
+                        if (current_player.isLastTurn) {
+                            toSpecificSocket({id: player1.socketId, method: 'notifyLastTurn'});
+                        }
+                    }
+                }
             }
             
             
@@ -137,22 +170,35 @@ io.on('connection', (socket) => {
             //         turn = true;
             //     }
             // }
-
-            console.log(position.x);
-            console.log(position.y);
             // Win-condition
-            if (position.x === 150 && position.y === 150) {
-                winningPlayer = socket.id === player1.socketId ? '1' : '2';
+            // if (position.x === 150 && position.y === 150) {
+            //     winningPlayer = socket.id === player1.socketId ? '1' : '2';
 
-                toSender('winStatus', {message: 'You won! :D', winningPlayer: winningPlayer});
-                toAllButSender('winStatus', {message: 'You lost :(', winningPlayer: winningPlayer})
-			}
+            //     toSender('winStatus', {message: 'You won! :D', winningPlayer: winningPlayer});
+            //     toAllButSender('winStatus', {message: 'You lost :(', winningPlayer: winningPlayer})
+			// }
         }
     });
 
     // TODO: Trigger last turns
     // TODO: Calculate scores
     // TODO: Reset game (shuffle, deal, trigger start)
+
+    socket.on('nextRound', function() {
+        if (socket.id === player1.socketId) {
+            reset();
+            updateAllCards();
+            toEveryone('nextRoundStart');
+        }
+    })
+
+    socket.on('newGame', function() {
+        if (socket.id === player1.socketId) {
+            reset('score');
+            updateAllCards();
+            toEveryone('nextGameStart');
+        }
+    })
 
     
     socket.on('disconnect', function() {
@@ -161,7 +207,7 @@ io.on('connection', (socket) => {
         --players;
         // If there are no more players, reset everything for when they join next time
         if (players === 0) {
-            reset(resetPlayers=true);
+            reset('scoreAndId');
         }
     });
 });
@@ -178,14 +224,47 @@ function updateAllCards() {
 
 
 // Prepare everything for the next game
-function reset(resetPlayers=false) {
-    if (resetPlayers) {
-        player1.socketId = '';
-        player2.socketId = '';
+function reset(resetPlayers) {
+    if (resetPlayers === 'scoreAndId') {
+        player1 = {socketId: '', score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['H9', 'H3', 'HA', 'H2', 'H5', 'J1']};
+        player2 = {socketId: '', score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['SK', 'S6', 'S8', 'S10', 'SJ', 'SA']};
+    } else if (resetPlayers === 'score') {
+        player1 = {socketId: player1.socketId, score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['H9', 'H3', 'HA', 'H2', 'H5', 'J1']};
+        player2 = {socketId: player2.socketId, score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['SK', 'S6', 'S8', 'S10', 'SJ', 'SA']};
+    } else {
+        player1 = {socketId: player1.socketId, score: player1.score, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['H9', 'H3', 'HA', 'H2', 'H5', 'J1']};
+        player2 = {socketId: player2.socketId, score: player2.score, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['SK', 'S6', 'S8', 'S10', 'SJ', 'SA']};
     }
-    position.x = 200;
-    position.y = 200;
+    console.log('player 1');
+    console.log(player1);
+    console.log('player 2');
+    console.log(player2);
+    draw_pile = ['SA', 'HK', 'J2'];
+    discard_pile = '';
+    top_of_draw_pile = '';
+    players = 0;
+    player_array = [];
     turn = true;
+}
+
+// Calculate scores, notify players, and reset
+function endGame() {
+    player1.score = 90;
+    player2.score = 95;
+
+    if (player1.score > player2.score && player1.score >= 100) {
+        toEveryone('announceWinner', {message: 'Player 1 Wins!', p1Score: player1.score, p2Score: player2.score})
+    } else if (player2.score > player1.score && player2.score >= 100) {
+        toEveryone('announceWinner', {message: 'Player 2 Wins!', p1Score: player1.score, p2Score: player2.score})
+    } else {
+        toEveryone('roundSummary', {message: 'Round Summary', p1Score: player1.score, p2Score: player2.score});
+    }
+}
+
+
+function sendScores() {
+    toSpecificSocket({id: player1.socketId, method: 'roundSummary', message: player1.score});
+    toSpecificSocket({id: player2.socketId, method: 'roundSummary', message: player2.score});
 }
 
 

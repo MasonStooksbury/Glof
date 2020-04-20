@@ -68,19 +68,19 @@
 						<a (click)='chooseCard(0); replaceCard(0)'><img src={{card_theme}} width='100%' height='100%'></a>
 					</div>
 					<div class="p-col-3 middle-card">
-						<a (click)='chooseCard(1)'><img src={{card_theme}} width='100%' height='100%'></a>
+						<a (click)='chooseCard(1); replaceCard(1)'><img src={{card_theme}} width='100%' height='100%'></a>
 					</div>
 					<div class="p-col-3">
-						<a (click)='chooseCard(2)'><img src={{card_theme}} width='100%' height='100%'></a>
+						<a (click)='chooseCard(2); replaceCard(2)'><img src={{card_theme}} width='100%' height='100%'></a>
 					</div>
 					<div class="p-col-3">
-						<a (click)='chooseCard(3)'><img src={{card_theme}} width='100%' height='100%'></a>
+						<a (click)='chooseCard(3); replaceCard(3)'><img src={{card_theme}} width='100%' height='100%'></a>
 					</div>
 					<div class="p-col-3 middle-card">
-						<a (click)='chooseCard(4)'><img src={{card_theme}} width='100%' height='100%'></a>
+						<a (click)='chooseCard(4); replaceCard(4)'><img src={{card_theme}} width='100%' height='100%'></a>
 					</div>
 					<div class="p-col-3">
-						<a (click)='chooseCard(5)'><img src={{card_theme}} width='100%' height='100%'></a>
+						<a (click)='chooseCard(5); replaceCard(5)'><img src={{card_theme}} width='100%' height='100%'></a>
 					</div>
 				</div>
 			</div>
@@ -91,7 +91,11 @@
 
 
 <!-- A dialog of whether they won or lost -->
-<p-dialog header='{{winStatusMessage}}' [closable]='false' [visible]='showWinStatusDialog' [modal]='true' [blockScroll]='true'>
+<p-dialog header='{{headerMessage}}' [closable]='false' [visible]='showDialog' [modal]='true' [blockScroll]='true'>
 	<!-- Insert meme here -->
 	<!-- <p-button></p-button> -->
+	<span>Player 1: {{player1Score}}</span>
+	<span>Player 2: {{player2Score}}</span>
+	<button *ngIf='!gameOver && player_id === "1"' class='buffered-top' (click)='reset("nextRound")'>Next Round</button>
+	<button *ngIf='gameOver && player_id === "1"' class='buffered-top' (click)='reset("newGame")'>New Game</button>
 </p-dialog>

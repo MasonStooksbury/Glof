@@ -1,4 +1,4 @@
-import { Component, ViewChild, ElementRef, OnInit } from '@angular/core';
+import { Component, ViewChild, ElementRef, OnInit, AfterViewInit } from '@angular/core';
 import io from 'socket.io-client';
 import "primeflex/primeflex.css";
 import { GameService } from './services/game/game.service';
@@ -8,7 +8,7 @@ import { GameService } from './services/game/game.service';
 	templateUrl: './app.component.html',
 	styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit {	
+export class AppComponent implements OnInit, AfterViewInit {	
 	context: any;
 	socket: any;
 
@@ -18,9 +18,9 @@ export class AppComponent implements OnInit {
 
 	message = '';
 	player_id = '';
-	winStatusMessage = '';
+	headerMessage = '';
 	winningPlayer = '';
-	showWinStatusDialog = false;
+	showDialog = false;
 
 	// Each card will start off as an empty string
 	my_cards = ['', '', '', '', '', ''];
@@ -37,6 +37,11 @@ export class AppComponent implements OnInit {
 	topDiscardCard = '';
 	topDrawCard = ''
 
+	player1Score = 0;
+	player2Score = 0;
+
+	gameOver = false;
+
 
 	constructor(private gameService: GameService) { }
 
@@ -45,14 +50,10 @@ export class AppComponent implements OnInit {
 	}
 
 	public ngAfterViewInit() {
+		this.showDialog = false;
 		this.socket.on('connection', data => {
 			this.message = data.message;
 			this.player_id = data.player_id;
-		})
-		this.socket.on('winStatus', data => {
-			this.showWinStatusDialog = true;
-			this.winStatusMessage = data.message;
-			this.winningPlayer = data.winningPlayer;
 		})
 		this.socket.on('startGame', data => {
 			this.startGame = true;
@@ -80,17 +81,67 @@ export class AppComponent implements OnInit {
 			console.log(`draw card: ${data}`);
 			this.topDrawCard = data;
 		})
+		// Receive top Discard card from the server
+		// This happens on replace and discard so it is a good place to reset
+		//		the draw booleans
 		this.socket.on('receiveDiscardCard', data => {
 			console.log(`discard card: ${data}`);
 			this.topDiscardCard = data;
 			this.cardDrawnFromDiscardPile = false;
 			this.cardDrawnFromDrawPile = false;
 		})
+		//a;lsfjkd
+		this.socket.on('notifyLastTurn', function() {
+			console.log('FINAL TURN');
+		})
+		this.socket.on('receiveScore', data => {
+			console.log(`score: ${data}`);
+		})
+		this.socket.on('announceWinner', data => {
+			console.log('announce winner');
+			this.gameOver = true;
+			this.headerMessage = data.message;
+			this.player1Score = data.p1Score;
+			this.player2Score = data.p2Score;
+			this.showDialog = true;
+		})
+		this.socket.on('roundSummary', data => {
+			console.log('round summary');
+			this.headerMessage = data.message;
+			this.player1Score = data.p1Score;
+			this.player2Score = data.p2Score;
+			this.showDialog = true;
+		})
+		this.socket.on('nextRoundStart', function() {
+			console.log('next round');
+			this.chooseTwoPhase = true;
+			this.turnsPhase = false;
+			this.showDialog = false;
+
+			this.cardDrawnFromDrawPile = false;
+			this.cardDrawnFromDiscardPile = false;
+
+			this.topDrawCard = '';
+			console.log(`draw card: ${this.cardDrawnFromDrawPile}`);
+			console.log(`topdraw card: ${this.topDrawCard}`);
+			console.log(`show dialog card: ${this.showDialog}`);
+			console.log(`choose2 card: ${this.chooseTwoPhase}`);
+		})
+		this.socket.on('nextGameStart', function() {
+			console.log('next game!');
+			this.gameOver = false;
+			this.player1Score = 0;
+			this.player2Score = 0;
+		})
 	}
 
-	public turnMove(desiredMove: string) {
-		this.socket.emit('move', desiredMove);
-	}
+
+
+	// ###################################################################
+	// ########################## Actions ################################
+	// ###################################################################
+
+
 
 	public readyUp() {
 		this.socket.emit('playerReadyUp');
@@ -124,9 +175,16 @@ export class AppComponent implements OnInit {
 	}
 
 	public replaceCard(cardIndex: number) {
+		console.log('replace attempt');
+		console.log(cardIndex);
 		if (this.turnsPhase && this.cardDrawnFromDrawPile ||
 			this.turnsPhase && this.cardDrawnFromDiscardPile) {
 			this.socket.emit('playerTurn', {action: 'replace', data: cardIndex})
 		}
+	}
+
+	public reset(action: string) {
+		console.log('reset');
+		this.socket.emit(action);
 	}
 }
