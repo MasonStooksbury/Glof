@@ -50,7 +50,6 @@ export class AppComponent implements OnInit, AfterViewInit {
 	}
 
 	public ngAfterViewInit() {
-		this.showDialog = false;
 		this.socket.on('connection', data => {
 			this.message = data.message;
 			this.player_id = data.player_id;
@@ -91,7 +90,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 			this.cardDrawnFromDrawPile = false;
 		})
 		//a;lsfjkd
-		this.socket.on('notifyLastTurn', function() {
+		this.socket.on('notifyLastTurn', data => {
 			console.log('FINAL TURN');
 		})
 		this.socket.on('receiveScore', data => {
@@ -112,14 +111,11 @@ export class AppComponent implements OnInit, AfterViewInit {
 			this.player2Score = data.p2Score;
 			this.showDialog = true;
 		})
-		this.socket.on('nextRoundStart', function() {
+		this.socket.on('nextRoundStart', data => {
 			console.log('next round');
+			this.showDialog = false;
 			this.chooseTwoPhase = true;
 			this.turnsPhase = false;
-			this.showDialog = false;
-
-			this.cardDrawnFromDrawPile = false;
-			this.cardDrawnFromDiscardPile = false;
 
 			this.topDrawCard = '';
 			console.log(`draw card: ${this.cardDrawnFromDrawPile}`);
@@ -127,11 +123,16 @@ export class AppComponent implements OnInit, AfterViewInit {
 			console.log(`show dialog card: ${this.showDialog}`);
 			console.log(`choose2 card: ${this.chooseTwoPhase}`);
 		})
-		this.socket.on('nextGameStart', function() {
+		this.socket.on('nextGameStart', data => {
 			console.log('next game!');
+			this.showDialog = false;
 			this.gameOver = false;
 			this.player1Score = 0;
 			this.player2Score = 0;
+			this.chooseTwoPhase = true;
+			this.turnsPhase = false;
+
+			this.topDrawCard = '';
 		})
 	}
 

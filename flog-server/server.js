@@ -76,6 +76,7 @@ io.on('connection', (socket) => {
         }
 
         if (player1.chosenCards === 2 && player2.chosenCards === 2) {
+            console.log('sent cards');
             // Send each player the other person's cards
             toSpecificSocket({id: player1.socketId, method: 'receiveOtherCards', message: player2.display_cards});
             toSpecificSocket({id: player2.socketId, method: 'receiveOtherCards', message: player1.display_cards});
@@ -188,6 +189,8 @@ io.on('connection', (socket) => {
         if (socket.id === player1.socketId) {
             reset();
             updateAllCards();
+            discard_pile = draw_pile.shift();
+            toEveryone('receiveDiscardCard', discard_pile);
             toEveryone('nextRoundStart');
         }
     })
@@ -196,6 +199,8 @@ io.on('connection', (socket) => {
         if (socket.id === player1.socketId) {
             reset('score');
             updateAllCards();
+            discard_pile = draw_pile.shift();
+            toEveryone('receiveDiscardCard', discard_pile);
             toEveryone('nextGameStart');
         }
     })
@@ -208,6 +213,8 @@ io.on('connection', (socket) => {
         // If there are no more players, reset everything for when they join next time
         if (players === 0) {
             reset('scoreAndId');
+            players = 0;
+            player_array = [];
         }
     });
 });
@@ -242,15 +249,15 @@ function reset(resetPlayers) {
     draw_pile = ['SA', 'HK', 'J2'];
     discard_pile = '';
     top_of_draw_pile = '';
-    players = 0;
-    player_array = [];
+    player_array = [player1, player2];
     turn = true;
+    // TODO: Reshuffle draw pile
 }
 
 // Calculate scores, notify players, and reset
 function endGame() {
-    player1.score = 90;
-    player2.score = 95;
+    player1.score = 100;
+    player2.score = 105;
 
     if (player1.score > player2.score && player1.score >= 100) {
         toEveryone('announceWinner', {message: 'Player 1 Wins!', p1Score: player1.score, p2Score: player2.score})
