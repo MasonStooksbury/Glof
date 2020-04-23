@@ -44,6 +44,7 @@
 					</div>
 				</div>
 			</div>
+			<label>Their Cards</label>
 		</div>
 		<div class='row'>
 			<!-- Draw/Discard piles -->
@@ -52,17 +53,19 @@
 					<!-- Discard -->
 					<div class="p-col-3">
 						<a (click)='discardCard(); drawCardFromDiscardPile()'><img src={{card_theme}} width='100%' height='100%'></a>
+						<label>Discard</label>
 					</div>
 					<!-- Draw -->
 					<div class="p-col-3 draw-pile">
 						<a (click)='drawCardFromDrawPile()'><img src={{card_theme}} width='100%' height='100%'></a>
+						<label>Draw</label>
 					</div>
 				</div>
 			</div>
 		</div>
-		<div class='row'>
+		<div class='row buffered-top'>
 			<!-- My cards -->
-			<div class='p-col-6 p-offset-3 buffered-top my-cards'>
+			<div class='p-col-6 p-offset-3 my-cards'>
 				<div class="p-grid p-justify-center">
 					<div class="p-col-3">
 						<a (click)='chooseCard(0); replaceCard(0)'><img src={{card_theme}} width='100%' height='100%'></a>
@@ -91,7 +94,7 @@
 
 
 <!-- A dialog of whether they won or lost -->
-<p-dialog header='{{headerMessage}}' [closable]='false' [visible]='showDialog' [modal]='true' [blockScroll]='true'>
+<p-dialog header='{{headerMessage}}' (onHide)='showDialog = false' [(visible)]='showDialog' [modal]='true' [blockScroll]='true'>
 	<!-- Insert meme here -->
 	<!-- <p-button></p-button> -->
 	<span>Player 1: {{player1Score}}</span>

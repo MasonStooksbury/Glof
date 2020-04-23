@@ -1,4 +1,4 @@
-import { Component, ViewChild, ElementRef, OnInit, AfterViewInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit } from '@angular/core';
 import io from 'socket.io-client';
 import "primeflex/primeflex.css";
 import { GameService } from './services/game/game.service';
@@ -20,6 +20,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 	player_id = '';
 	headerMessage = '';
 	winningPlayer = '';
+	otherText = '';
 	showDialog = false;
 
 	// Each card will start off as an empty string
@@ -88,6 +89,12 @@ export class AppComponent implements OnInit, AfterViewInit {
 			this.topDiscardCard = data;
 			this.cardDrawnFromDiscardPile = false;
 			this.cardDrawnFromDrawPile = false;
+		})
+		this.socket.on('notifyTurn', data => {
+			console.log(`show dialog ${this.showDialog}`);
+			console.log(`notifyTurn: ${data}`);
+			this.headerMessage = data;
+			this.showDialog = true;
 		})
 		//a;lsfjkd
 		this.socket.on('notifyLastTurn', data => {

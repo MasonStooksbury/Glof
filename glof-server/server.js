@@ -13,7 +13,7 @@ var draw_pile = ['SA', 'HK', 'J2'];
 var discard_pile = '';
 var top_of_draw_pile = '';
 
-var player1 = {socketId: '', isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', 'H3', '', '', 'H5', 'J1'], cards: ['H9', 'H3', 'HA', 'H2', 'H5', 'J1']};
+var player1 = {socketId: '', isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['H9', 'H3', 'HA', 'H2', 'H5', 'J1']};
 var player2 = {socketId: '', isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['SK', 'S6', 'S8', 'S10', 'SJ', 'SA']};
 var players = 0;
 var player_array = [];
@@ -118,16 +118,20 @@ io.on('connection', (socket) => {
                         player1.isLastTurn = true;
                         player2.isLastTurn = true;
                     }
-    
+
                     if (turn && socket.id === player1.socketId) {
                         turn = false;
                         if (current_player.isLastTurn) {
                             toSpecificSocket({id: player2.socketId, method: 'notifyLastTurn'});
+                        } else {
+                            toSpecificSocket({id: player2.socketId, method: 'notifyTurn', message: 'Your turn!'});
                         }
                     } else if (!turn && socket.id === player2.socketId) {
                         turn = true;
                         if (current_player.isLastTurn) {
                             toSpecificSocket({id: player1.socketId, method: 'notifyLastTurn'});
+                        } else {
+                            toSpecificSocket({id: player1.socketId, method: 'notifyTurn', message: 'Your turn!'});
                         }
                     }
                 }
@@ -151,11 +155,15 @@ io.on('connection', (socket) => {
                         turn = false;
                         if (current_player.isLastTurn) {
                             toSpecificSocket({id: player2.socketId, method: 'notifyLastTurn'});
+                        } else {
+                            toSpecificSocket({id: player2.socketId, method: 'notifyTurn', message: 'Your turn!'});
                         }
                     } else if (!turn && socket.id === player2.socketId) {
                         turn = true;
                         if (current_player.isLastTurn) {
                             toSpecificSocket({id: player1.socketId, method: 'notifyLastTurn'});
+                        } else {
+                            toSpecificSocket({id: player1.socketId, method: 'notifyTurn', message: 'Your turn!'});
                         }
                     }
                 }
