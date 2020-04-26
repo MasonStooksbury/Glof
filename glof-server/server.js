@@ -8,13 +8,19 @@ Http.listen(709, () => {
 
 // var player1_cards = ['HK', 'H3', 'HA', 'H2', 'H5', 'J'];
 // var player2_cards = ['SK', 'S6', 'S8', 'S10', 'SJ', 'SA'];
+cards = [   'DA', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10', 'DJ', 'DQ', 'DK',
+    'SA', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'SJ', 'SQ', 'SK',
+    'HA', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'H8', 'H9', 'H10', 'HJ', 'HQ', 'HK',
+    'CA', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10', 'CJ', 'CQ', 'CK',
+    'Z1', 'Z2'
+];
 
-var draw_pile = ['SA', 'HK', 'J2'];
+var draw_pile = [];
 var discard_pile = '';
 var top_of_draw_pile = '';
 
-var player1 = {socketId: '', isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['H9', 'H3', 'HA', 'H2', 'H5', 'J1']};
-var player2 = {socketId: '', isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['SK', 'S6', 'S8', 'S10', 'SJ', 'SA']};
+var player1 = {socketId: '', isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
+var player2 = {socketId: '', isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
 var players = 0;
 var player_array = [];
 
@@ -53,6 +59,8 @@ io.on('connection', (socket) => {
 
         // When both players are ready, start the main game and send the discard card
         if (player1.isReady && player2.isReady) {
+            shuffleDeckAndAssign();
+            // Assign players their cards
             discard_pile = draw_pile.shift();
             toEveryone('startGame', discard_pile);
         }
@@ -111,62 +119,39 @@ io.on('connection', (socket) => {
                 updateAllCards();
                 toEveryone('receiveDiscardCard', discard_pile);
 
-                if (current_player.isLastTurn) {
-                    endGame();
-                } else {
-                    if (!current_player.display_cards.includes('')) {
-                        player1.isLastTurn = true;
-                        player2.isLastTurn = true;
-                    }
+                changeTurn(current_player);
 
-                    if (turn && socket.id === player1.socketId) {
-                        turn = false;
-                        if (current_player.isLastTurn) {
-                            toSpecificSocket({id: player2.socketId, method: 'notifyLastTurn'});
-                        } else {
-                            toSpecificSocket({id: player2.socketId, method: 'notifyTurn', message: 'Your turn!'});
-                        }
-                    } else if (!turn && socket.id === player2.socketId) {
-                        turn = true;
-                        if (current_player.isLastTurn) {
-                            toSpecificSocket({id: player1.socketId, method: 'notifyLastTurn'});
-                        } else {
-                            toSpecificSocket({id: player1.socketId, method: 'notifyTurn', message: 'Your turn!'});
-                        }
-                    }
-                }
+                // if (current_player.isLastTurn) {
+                //     endGame();
+                // } else {
+                //     if (!current_player.display_cards.includes('')) {
+                //         player1.isLastTurn = true;
+                //         player2.isLastTurn = true;
+                //     }
+
+                //     if (turn && socket.id === player1.socketId) {
+                //         turn = false;
+                //         if (current_player.isLastTurn) {
+                //             toSpecificSocket({id: player2.socketId, method: 'notifyLastTurn'});
+                //         } else {
+                //             toSpecificSocket({id: player2.socketId, method: 'notifyTurn', message: 'Your turn!'});
+                //         }
+                //     } else if (!turn && socket.id === player2.socketId) {
+                //         turn = true;
+                //         if (current_player.isLastTurn) {
+                //             toSpecificSocket({id: player1.socketId, method: 'notifyLastTurn'});
+                //         } else {
+                //             toSpecificSocket({id: player1.socketId, method: 'notifyTurn', message: 'Your turn!'});
+                //         }
+                //     }
+                // }
 
             } else if (data.action === 'discard') {
                 console.log('card discarded');
                 discard_pile = top_of_draw_pile;
                 toEveryone('receiveDiscardCard', discard_pile);
 
-                console.log(`final?: ${current_player.isLastTurn}`);
-                if (current_player.isLastTurn) {
-                    console.log('last turn?');
-                    endGame();
-                } else {
-                    if (!current_player.display_cards.includes('')) {
-                        player1.isLastTurn = true;
-                        player2.isLastTurn = true;
-                    }
-    
-                    if (turn && socket.id === player1.socketId) {
-                        turn = false;
-                        if (current_player.isLastTurn) {
-                            toSpecificSocket({id: player2.socketId, method: 'notifyLastTurn'});
-                        } else {
-                            toSpecificSocket({id: player2.socketId, method: 'notifyTurn', message: 'Your turn!'});
-                        }
-                    } else if (!turn && socket.id === player2.socketId) {
-                        turn = true;
-                        if (current_player.isLastTurn) {
-                            toSpecificSocket({id: player1.socketId, method: 'notifyLastTurn'});
-                        } else {
-                            toSpecificSocket({id: player1.socketId, method: 'notifyTurn', message: 'Your turn!'});
-                        }
-                    }
-                }
+                changeTurn(current_player);
             }
             
             
@@ -226,6 +211,36 @@ io.on('connection', (socket) => {
         }
     });
 });
+
+
+// Change turns and update stuff
+function changeTurn(current_player) {
+    if (current_player.isLastTurn) {
+        console.log('last turn?');
+        endGame();
+    } else {
+        if (!current_player.display_cards.includes('')) {
+            player1.isLastTurn = true;
+            player2.isLastTurn = true;
+        }
+
+        if (turn && socketReference.id === player1.socketId) {
+            turn = false;
+            if (current_player.isLastTurn) {
+                toSpecificSocket({id: player2.socketId, method: 'notifyLastTurn'});
+            } else {
+                toSpecificSocket({id: player2.socketId, method: 'notifyTurn', message: 'Your turn!'});
+            }
+        } else if (!turn && socketReference.id === player2.socketId) {
+            turn = true;
+            if (current_player.isLastTurn) {
+                toSpecificSocket({id: player1.socketId, method: 'notifyLastTurn'});
+            } else {
+                toSpecificSocket({id: player1.socketId, method: 'notifyTurn', message: 'Your turn!'});
+            }
+        }
+    }
+}
 
 
 // Update all hands and display cards
@@ -300,6 +315,37 @@ function toAllButSender(method, data) {
 
 function toSpecificSocket(data) {
     io.to(data.id).emit(data.method, data.message);
+}
+
+
+
+
+function shuffleDeckAndAssign() {
+    draw_pile = [...cards];
+    for(let i = draw_pile.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * i)
+        const temp = draw_pile[i]
+        draw_pile[i] = draw_pile[j]
+        draw_pile[j] = temp
+    }
+
+    console.log('cards');
+    console.log(cards);
+    console.log('\n\n\n\n');
+    console.log('draw');
+    console.log(draw_pile);
+
+    for(let i = 0; i < 6; i++) {
+        player1.cards[i] = draw_pile.shift();
+        player2.cards[i] = draw_pile.shift();
+    }
+
+    console.log('\n\n\n\n');
+    console.log('player 1 cards');
+    console.log(player1.cards);
+    console.log('\n\n\n\n');
+    console.log('player 2 cards');
+    console.log(player2.cards);
 }
 
 

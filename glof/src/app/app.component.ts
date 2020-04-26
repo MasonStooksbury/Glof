@@ -22,6 +22,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 	winningPlayer = '';
 	otherText = '';
 	showDialog = false;
+	showTurnDialog = false;
 
 	// Each card will start off as an empty string
 	my_cards = ['', '', '', '', '', ''];
@@ -57,6 +58,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 		})
 		this.socket.on('startGame', data => {
 			this.startGame = true;
+			console.log(`discard card from start game: ${data}`);
 			this.topDiscardCard = data;
 			// Once the game has started, allow the players to pick two cards
 			this.chooseTwoPhase = true;
@@ -91,10 +93,10 @@ export class AppComponent implements OnInit, AfterViewInit {
 			this.cardDrawnFromDrawPile = false;
 		})
 		this.socket.on('notifyTurn', data => {
-			console.log(`show dialog ${this.showDialog}`);
+			console.log(`show dialog ${this.showTurnDialog}`);
 			console.log(`notifyTurn: ${data}`);
 			this.headerMessage = data;
-			this.showDialog = true;
+			this.showTurnDialog = true;
 		})
 		//a;lsfjkd
 		this.socket.on('notifyLastTurn', data => {
