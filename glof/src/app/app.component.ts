@@ -101,6 +101,11 @@ export class AppComponent implements OnInit, AfterViewInit {
 		//a;lsfjkd
 		this.socket.on('notifyLastTurn', data => {
 			console.log('FINAL TURN');
+			// Use turn dialog
+			this.headerMessage = data;
+			this.showTurnDialog = true;
+			// Change message
+			// Change meme
 		})
 		this.socket.on('receiveScore', data => {
 			console.log(`score: ${data}`);
@@ -173,8 +178,8 @@ export class AppComponent implements OnInit, AfterViewInit {
 
 	public drawCardFromDiscardPile() {
 		if (this.turnsPhase && !this.cardDrawnFromDiscardPile && !this.cardDrawnFromDrawPile) {
-			this.socket.emit('playerTurn', 'draw');
 			this.cardDrawnFromDiscardPile = true;
+			console.log(`you picked up the ${this.topDiscardCard} from discard`);
 		}
 	}
 
@@ -189,7 +194,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 		console.log(cardIndex);
 		if (this.turnsPhase && this.cardDrawnFromDrawPile ||
 			this.turnsPhase && this.cardDrawnFromDiscardPile) {
-			this.socket.emit('playerTurn', {action: 'replace', data: cardIndex})
+			this.socket.emit('playerTurn', {action: 'replace', data: cardIndex, fromDiscardOrNah: this.cardDrawnFromDiscardPile})
 		}
 	}
 

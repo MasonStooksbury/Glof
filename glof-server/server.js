@@ -36,19 +36,17 @@ socketReference = {};
 io.on('connection', (socket) => {
     socketReference = socket;
 
-    // TODO: Initialize game setup (shuffle and deal)
-
     // Assign players as they connect
     if (player1.socketId === '') {
         player1.socketId = socket.id;
         player_array.push(player1);
         console.log(`player 1 id: ${socket.id}`);
-        toSender('connection', {message: 'Welcome to Flog! You are Player 1', player_id: '1'});
+        toSender('connection', {message: 'Welcome to Glof! You are Player 1', player_id: '1'});
     } else {
         player2.socketId = socket.id;
         player_array.push(player2);
         console.log(`player 2 id: ${socket.id}`);
-        toSender('connection', {message: 'Welcome to Flog! You are Player 2', player_id: '2'})
+        toSender('connection', {message: 'Welcome to Glof! You are Player 2', player_id: '2'})
     }
     ++players;
 
@@ -94,8 +92,6 @@ io.on('connection', (socket) => {
         }
     })
 
-    // TODO: Take turns until end
-
     // This is where the logic for turn-taking happens
     socket.on('playerTurn', data => {
         socketReference = socket;
@@ -108,17 +104,27 @@ io.on('connection', (socket) => {
                 toSender('receiveDrawCard', top_of_draw_pile);
             } else if (data.action === 'replace') {
                 console.log('card replaced');
+
+                // Determine what the card that will be kept based on where it was drawn
+                new_card = data.fromDiscardOrNah ? discard_pile : top_of_draw_pile;
+
+                // Change the discard pile to be the player's old card
                 discard_pile = current_player.cards[data.data]
-                current_player.display_cards[data.data] = top_of_draw_pile;
-                current_player.cards[data.data] = top_of_draw_pile;
+
+                // Change their card deck and their display deck to have the new card
+                current_player.display_cards[data.data] = new_card;
+                current_player.cards[data.data] = new_card;
 
                 console.log(`discard pile: ${discard_pile}`);
                 console.log(`display cards: ${current_player.display_cards}`);
                 console.log(`cards: ${current_player.cards}`);
 
+                // Send everyone their deck and their opponent's deck
                 updateAllCards();
+                // Update the discard card
                 toEveryone('receiveDiscardCard', discard_pile);
 
+                // Change turns
                 changeTurn(current_player);
 
                 // if (current_player.isLastTurn) {
@@ -174,8 +180,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // TODO: Trigger last turns
-    // TODO: Calculate scores
     // TODO: Reset game (shuffle, deal, trigger start)
 
     socket.on('nextRound', function() {
@@ -227,14 +231,14 @@ function changeTurn(current_player) {
         if (turn && socketReference.id === player1.socketId) {
             turn = false;
             if (current_player.isLastTurn) {
-                toSpecificSocket({id: player2.socketId, method: 'notifyLastTurn'});
+                toSpecificSocket({id: player2.socketId, method: 'notifyLastTurn', message: 'Last turn!'});
             } else {
                 toSpecificSocket({id: player2.socketId, method: 'notifyTurn', message: 'Your turn!'});
             }
         } else if (!turn && socketReference.id === player2.socketId) {
             turn = true;
             if (current_player.isLastTurn) {
-                toSpecificSocket({id: player1.socketId, method: 'notifyLastTurn'});
+                toSpecificSocket({id: player1.socketId, method: 'notifyLastTurn', message: 'Last turn!'});
             } else {
                 toSpecificSocket({id: player1.socketId, method: 'notifyTurn', message: 'Your turn!'});
             }
@@ -269,7 +273,7 @@ function reset(resetPlayers) {
     console.log(player1);
     console.log('player 2');
     console.log(player2);
-    draw_pile = ['SA', 'HK', 'J2'];
+    draw_pile = [];
     discard_pile = '';
     top_of_draw_pile = '';
     player_array = [player1, player2];
@@ -279,8 +283,7 @@ function reset(resetPlayers) {
 
 // Calculate scores, notify players, and reset
 function endGame() {
-    player1.score = 100;
-    player2.score = 105;
+    calculateScores();
 
     if (player1.score > player2.score && player1.score >= 100) {
         toEveryone('announceWinner', {message: 'Player 1 Wins!', p1Score: player1.score, p2Score: player2.score})
@@ -291,11 +294,11 @@ function endGame() {
     }
 }
 
-
-function sendScores() {
-    toSpecificSocket({id: player1.socketId, method: 'roundSummary', message: player1.score});
-    toSpecificSocket({id: player2.socketId, method: 'roundSummary', message: player2.score});
-}
+// TODO: Yeet?
+// function sendScores() {
+//     toSpecificSocket({id: player1.socketId, method: 'roundSummary', message: player1.score});
+//     toSpecificSocket({id: player2.socketId, method: 'roundSummary', message: player2.score});
+// }
 
 
 // I realize they are simple commands, but I found myself not being able to quickly
@@ -346,6 +349,129 @@ function shuffleDeckAndAssign() {
     console.log('\n\n\n\n');
     console.log('player 2 cards');
     console.log(player2.cards);
+}
+
+
+function getScore(card) {
+    if (card.includes('Z')) {
+        return -25;
+    } else if (card.includes('A')) {
+        return 1;
+    } else if (card.includes('10')) {
+        return 10;
+    } else if (card.includes('K')) {
+        return 0;
+    } else if (card.includes('J') || card.includes('Q')) {
+        return card[1];
+    } else {
+        return parseInt(card[1], 10);
+    }
+}
+
+function calculateScores() {
+    blockPosition = 1;
+
+    player1_card_scores = [];
+    player2_card_scores = [];
+
+    player1.cards.forEach(function (item, index) {
+        player1_card_scores[index] = getScore(item);
+    });
+    console.log(player1_card_scores);
+    console.log(player1.cards);
+    console.log('\n\n\n\n');
+
+    player2.cards.forEach(function (item, index) {
+        player2_card_scores[index] = getScore(item);
+    });
+    console.log(player2_card_scores);
+    console.log(player2.cards);
+
+    console.log('\n\n\n\n');
+
+
+    // Break into columns
+    columns = [
+                [player1_card_scores[0], player1_card_scores[3]],
+                [player1_card_scores[1], player1_card_scores[4]],
+                [player1_card_scores[2], player1_card_scores[5]]
+              ];
+    column_scores = [];
+    player1_total_score = 0;
+    player2_total_score = 0;
+
+    // Check for blocks
+    if (columns[0][0] === columns[0][1] && columns[1][0] === columns[1][1]) {
+        blockPosition = 2;
+        player1_total_score -= 25;
+    } else if (columns[1][0] === columns[1][1] && columns[2][0] === columns[2][1]) {
+        blockPosition = 0;
+        player1_total_score -= 25;
+    }
+    console.log('block?');
+    console.log(blockPosition);
+
+    // If there is a block (2x2 of the same card), then check the last remaining column
+    if (blockPosition != 1) {
+        console.log('block scorer');
+        console.log('block position');
+        console.log(blockPosition);
+        console.log('columns');
+        console.log(columns[blockPosition]);
+        if (columns[blockPosition].includes(2) && columns[blockPosition].includes(-25)) {
+            player1_total_score -= 25;
+        } else if (columns[blockPosition].includes(2) || (columns[blockPosition][0] === columns[blockPosition][1])) {
+            player1_total_score += 0;
+        } else if (columns[blockPosition].includes('J') && columns[blockPosition].includes('Q')) {
+            player1_total_score += 20;
+        } else if (columns[blockPosition].includes('J') || columns[blockPosition].includes('Q')) {
+            columns[blockPosition].forEach(item => {
+                if (item != 'J' && item != 'Q') {
+                    player1_total_score += (10 + item);
+                }
+            });
+        } else {
+            player1_total_score += (columns[blockPosition][0] + columns[blockPosition][1]);
+        }
+    } 
+    // Otherwise, since there are no blocks, calculate each column collectively
+    else {
+        columns.forEach(item => {
+            console.log('item');
+            console.log(item);
+            if (item.includes(2) && item.includes(-25)) {
+                console.log('2 and joker');
+                player1_total_score -= 25;
+            } else if (item.includes(2) || (item[0] === item[1])) {
+                console.log('just 2 or matching');
+                player1_total_score += 0;
+            } else if (item.includes('J') && item.includes('Q')) {
+                console.log('J and Q');
+                player1_total_score += 20;
+            } else if (item.includes('J') || item.includes('Q')) {
+                console.log('J or Q');
+                item.forEach(elem => {
+                    if (elem != 'J' && elem != 'Q') {
+                        console.log('score before');
+                        console.log(player1_total_score);
+                        player1_total_score += (10 + elem);
+                        console.log('score after');
+                        console.log(player1_total_score);
+                    }
+                });
+            } else {
+                console.log('main else');
+                console.log(item[0]);
+                console.log(item[1]);
+                player1_total_score += (item[0] + item[1]);
+            }
+        });
+    }
+
+    player1.score = player1_total_score;
+    console.log('total');
+    console.log(player1_total_score);
+    player2.score = 30;
 }
 
 
