@@ -185,6 +185,7 @@ io.on('connection', (socket) => {
     socket.on('nextRound', function() {
         if (socket.id === player1.socketId) {
             reset();
+            shuffleDeckAndAssign();
             updateAllCards();
             discard_pile = draw_pile.shift();
             toEveryone('receiveDiscardCard', discard_pile);
@@ -195,6 +196,7 @@ io.on('connection', (socket) => {
     socket.on('newGame', function() {
         if (socket.id === player1.socketId) {
             reset('score');
+            shuffleDeckAndAssign();
             updateAllCards();
             discard_pile = draw_pile.shift();
             toEveryone('receiveDiscardCard', discard_pile);
@@ -260,14 +262,14 @@ function updateAllCards() {
 // Prepare everything for the next game
 function reset(resetPlayers) {
     if (resetPlayers === 'scoreAndId') {
-        player1 = {socketId: '', score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['H9', 'H3', 'HA', 'H2', 'H5', 'J1']};
-        player2 = {socketId: '', score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['SK', 'S6', 'S8', 'S10', 'SJ', 'SA']};
+        player1 = {socketId: '', score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
+        player2 = {socketId: '', score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
     } else if (resetPlayers === 'score') {
-        player1 = {socketId: player1.socketId, score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['H9', 'H3', 'HA', 'H2', 'H5', 'J1']};
-        player2 = {socketId: player2.socketId, score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['SK', 'S6', 'S8', 'S10', 'SJ', 'SA']};
+        player1 = {socketId: player1.socketId, score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
+        player2 = {socketId: player2.socketId, score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
     } else {
-        player1 = {socketId: player1.socketId, score: player1.score, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['H9', 'H3', 'HA', 'H2', 'H5', 'J1']};
-        player2 = {socketId: player2.socketId, score: player2.score, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['SK', 'S6', 'S8', 'S10', 'SJ', 'SA']};
+        player1 = {socketId: player1.socketId, score: player1.score, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
+        player2 = {socketId: player2.socketId, score: player2.score, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
     }
     console.log('player 1');
     console.log(player1);
@@ -283,7 +285,9 @@ function reset(resetPlayers) {
 
 // Calculate scores, notify players, and reset
 function endGame() {
-    calculateScores();
+    setScores();
+
+    // TODO: Change scores here and make sure these branches work
 
     if (player1.score > player2.score && player1.score >= 100) {
         toEveryone('announceWinner', {message: 'Player 1 Wins!', p1Score: player1.score, p2Score: player2.score})
@@ -312,9 +316,9 @@ function toEveryone(method, data) {
     io.emit(method, data);
 }
 
-function toAllButSender(method, data) {
-    socketReference.broadcast.emit(method, data);
-}
+// function toAllButSender(method, data) {
+//     socketReference.broadcast.emit(method, data);
+// }
 
 function toSpecificSocket(data) {
     io.to(data.id).emit(data.method, data.message);
@@ -352,126 +356,108 @@ function shuffleDeckAndAssign() {
 }
 
 
-function getScore(card) {
-    if (card.includes('Z')) {
-        return -25;
-    } else if (card.includes('A')) {
-        return 1;
-    } else if (card.includes('10')) {
-        return 10;
-    } else if (card.includes('K')) {
-        return 0;
-    } else if (card.includes('J') || card.includes('Q')) {
-        return card[1];
-    } else {
-        return parseInt(card[1], 10);
-    }
+function getCardValuesList(card_list) {
+    card_scores = [];
+    card_list.forEach(card => {
+        if (card.includes('Z')) {
+            card_scores.push(-25);
+        } else if (card.includes('A')) {
+            card_scores.push(1);
+        } else if (card.includes('10')) {
+            card_scores.push(10);
+        } else if (card.includes('K')) {
+            card_scores.push(0);
+        } else if (card.includes('J') || card.includes('Q')) {
+            card_scores.push(card[1]);
+        } else {
+            card_scores.push(parseInt(card[1], 10));
+        }
+    });
+    return card_scores;
 }
 
-function calculateScores() {
-    blockPosition = 1;
+function setScores() {
+    // player1_card_scores = [];
+    // player2_card_scores = [];
 
-    player1_card_scores = [];
-    player2_card_scores = [];
-
-    player1.cards.forEach(function (item, index) {
-        player1_card_scores[index] = getScore(item);
-    });
-    console.log(player1_card_scores);
+    // player1.cards.forEach(function (item, index) {
+    //     player1_card_scores[index] = getScore(item);
+    // });
+    // console.log(player1_card_scores);
     console.log(player1.cards);
     console.log('\n\n\n\n');
 
-    player2.cards.forEach(function (item, index) {
-        player2_card_scores[index] = getScore(item);
-    });
-    console.log(player2_card_scores);
+    // player2.cards.forEach(function (item, index) {
+    //     player2_card_scores[index] = getScore(item);
+    // });
+    // console.log(player2_card_scores);
     console.log(player2.cards);
-
     console.log('\n\n\n\n');
 
 
-    // Break into columns
+    player1.score = calculateScore(getCardValuesList(player1.cards));
+    player2.score = calculateScore(getCardValuesList(player2.cards));
+}
+
+function calculateScore(card_scores) {
+    blockPosition = 1;
+    player_total_score = 0;
+    
     columns = [
-                [player1_card_scores[0], player1_card_scores[3]],
-                [player1_card_scores[1], player1_card_scores[4]],
-                [player1_card_scores[2], player1_card_scores[5]]
-              ];
-    column_scores = [];
-    player1_total_score = 0;
-    player2_total_score = 0;
+        [card_scores[0], card_scores[3]],
+        [card_scores[1], card_scores[4]],
+        [card_scores[2], card_scores[5]]
+    ];
 
     // Check for blocks
     if (columns[0][0] === columns[0][1] && columns[1][0] === columns[1][1]) {
         blockPosition = 2;
-        player1_total_score -= 25;
+        player_total_score -= 25;
     } else if (columns[1][0] === columns[1][1] && columns[2][0] === columns[2][1]) {
         blockPosition = 0;
-        player1_total_score -= 25;
+        player_total_score -= 25;
     }
-    console.log('block?');
-    console.log(blockPosition);
 
     // If there is a block (2x2 of the same card), then check the last remaining column
     if (blockPosition != 1) {
-        console.log('block scorer');
-        console.log('block position');
-        console.log(blockPosition);
-        console.log('columns');
-        console.log(columns[blockPosition]);
         if (columns[blockPosition].includes(2) && columns[blockPosition].includes(-25)) {
-            player1_total_score -= 25;
+            player_total_score -= 25;
         } else if (columns[blockPosition].includes(2) || (columns[blockPosition][0] === columns[blockPosition][1])) {
-            player1_total_score += 0;
+            player_total_score += 0;
         } else if (columns[blockPosition].includes('J') && columns[blockPosition].includes('Q')) {
-            player1_total_score += 20;
+            player_total_score += 20;
         } else if (columns[blockPosition].includes('J') || columns[blockPosition].includes('Q')) {
             columns[blockPosition].forEach(item => {
                 if (item != 'J' && item != 'Q') {
-                    player1_total_score += (10 + item);
+                    player_total_score += (10 + item);
                 }
             });
         } else {
-            player1_total_score += (columns[blockPosition][0] + columns[blockPosition][1]);
+            player_total_score += (columns[blockPosition][0] + columns[blockPosition][1]);
         }
     } 
     // Otherwise, since there are no blocks, calculate each column collectively
     else {
         columns.forEach(item => {
-            console.log('item');
-            console.log(item);
             if (item.includes(2) && item.includes(-25)) {
-                console.log('2 and joker');
-                player1_total_score -= 25;
+                player_total_score -= 25;
             } else if (item.includes(2) || (item[0] === item[1])) {
-                console.log('just 2 or matching');
-                player1_total_score += 0;
+                player_total_score += 0;
             } else if (item.includes('J') && item.includes('Q')) {
-                console.log('J and Q');
-                player1_total_score += 20;
+                player_total_score += 20;
             } else if (item.includes('J') || item.includes('Q')) {
-                console.log('J or Q');
                 item.forEach(elem => {
                     if (elem != 'J' && elem != 'Q') {
-                        console.log('score before');
-                        console.log(player1_total_score);
-                        player1_total_score += (10 + elem);
-                        console.log('score after');
-                        console.log(player1_total_score);
+                        player_total_score += (10 + elem);
                     }
                 });
             } else {
-                console.log('main else');
-                console.log(item[0]);
-                console.log(item[1]);
-                player1_total_score += (item[0] + item[1]);
+                player_total_score += (item[0] + item[1]);
             }
         });
     }
 
-    player1.score = player1_total_score;
-    console.log('total');
-    console.log(player1_total_score);
-    player2.score = 30;
+    return player_total_score;
 }
 
 
