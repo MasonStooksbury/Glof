@@ -48,7 +48,7 @@
 		</div>
 		<div class='row'>
 			<!-- Draw/Discard piles -->
-			<div class='p-col-6 p-offset-3 buffered-top draw-discard-piles'>
+			<div class='p-col-6 p-offset-3 draw-discard-piles'>
 				<div class="p-grid p-justify-center">
 					<!-- Discard -->
 					<div class="p-col-3">
@@ -103,6 +103,7 @@
 	<button *ngIf='gameOver && player_id === "1"' class='buffered-top' (click)='reset("newGame")'>New Game</button>
 </p-dialog>
 
+<!-- Turn dialog -->
 <p-dialog header='{{headerMessage}}' (onHide)='showTurnDialog = false' [(visible)]='showTurnDialog' [modal]='true' [blockScroll]='true'>
 	<!-- Insert meme here -->
 	<!-- <p-button></p-button> -->

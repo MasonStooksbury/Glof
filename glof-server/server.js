@@ -1,3 +1,5 @@
+// As obviously told by the name of the file, this is the server
+
 const Express = require('express')();
 const Http = require('http').Server(Express);
 const io = require('socket.io')(Http);
@@ -6,8 +8,7 @@ Http.listen(709, () => {
     console.log('Listening at :709...');
 });
 
-// var player1_cards = ['HK', 'H3', 'HA', 'H2', 'H5', 'J'];
-// var player2_cards = ['SK', 'S6', 'S8', 'S10', 'SJ', 'SA'];
+// The available deck of cards plus both Jokers (Z1 and Z2)
 cards = [   'DA', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10', 'DJ', 'DQ', 'DK',
     'SA', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'SJ', 'SQ', 'SK',
     'HA', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'H8', 'H9', 'H10', 'HJ', 'HQ', 'HK',
@@ -81,6 +82,8 @@ io.on('connection', (socket) => {
             toSender('receiveCard', {card: current_player.display_cards[index], index: index});
         }
 
+        // Once both players have chosen their cards, send each player the opposing players display deck
+        //      and begin the game
         if (player1.chosenCards === 2 && player2.chosenCards === 2) {
             console.log('sent cards');
             // Send each player the other person's cards
@@ -89,6 +92,7 @@ io.on('connection', (socket) => {
 
             // End the choose-2 phase and begin the main game
             toEveryone('startTurns', true);
+            toSpecificSocket({id: player1.socketId, method: 'notifyTurn', message: 'Your turn!'});
         }
     })
 
@@ -127,31 +131,6 @@ io.on('connection', (socket) => {
                 // Change turns
                 changeTurn(current_player);
 
-                // if (current_player.isLastTurn) {
-                //     endGame();
-                // } else {
-                //     if (!current_player.display_cards.includes('')) {
-                //         player1.isLastTurn = true;
-                //         player2.isLastTurn = true;
-                //     }
-
-                //     if (turn && socket.id === player1.socketId) {
-                //         turn = false;
-                //         if (current_player.isLastTurn) {
-                //             toSpecificSocket({id: player2.socketId, method: 'notifyLastTurn'});
-                //         } else {
-                //             toSpecificSocket({id: player2.socketId, method: 'notifyTurn', message: 'Your turn!'});
-                //         }
-                //     } else if (!turn && socket.id === player2.socketId) {
-                //         turn = true;
-                //         if (current_player.isLastTurn) {
-                //             toSpecificSocket({id: player1.socketId, method: 'notifyLastTurn'});
-                //         } else {
-                //             toSpecificSocket({id: player1.socketId, method: 'notifyTurn', message: 'Your turn!'});
-                //         }
-                //     }
-                // }
-
             } else if (data.action === 'discard') {
                 console.log('card discarded');
                 discard_pile = top_of_draw_pile;
@@ -159,47 +138,23 @@ io.on('connection', (socket) => {
 
                 changeTurn(current_player);
             }
-            
-            
-            
-            // When the player is done with their turn, flip the turn boolean
-            // if (data === 'down'){
-            //     if (turn && socket.id === player1.socketId) {
-            //         turn = false;
-            //     } else if (!turn && socket.id === player2.socketId) {
-            //         turn = true;
-            //     }
-            // }
-            // Win-condition
-            // if (position.x === 150 && position.y === 150) {
-            //     winningPlayer = socket.id === player1.socketId ? '1' : '2';
-
-            //     toSender('winStatus', {message: 'You won! :D', winningPlayer: winningPlayer});
-            //     toAllButSender('winStatus', {message: 'You lost :(', winningPlayer: winningPlayer})
-			// }
         }
     });
 
     // TODO: Reset game (shuffle, deal, trigger start)
 
     socket.on('nextRound', function() {
+        socketReference = socket;
         if (socket.id === player1.socketId) {
             reset();
-            shuffleDeckAndAssign();
-            updateAllCards();
-            discard_pile = draw_pile.shift();
-            toEveryone('receiveDiscardCard', discard_pile);
             toEveryone('nextRoundStart');
         }
     })
 
     socket.on('newGame', function() {
+        socketReference = socket;
         if (socket.id === player1.socketId) {
             reset('score');
-            shuffleDeckAndAssign();
-            updateAllCards();
-            discard_pile = draw_pile.shift();
-            toEveryone('receiveDiscardCard', discard_pile);
             toEveryone('nextGameStart');
         }
     })
@@ -261,9 +216,11 @@ function updateAllCards() {
 
 // Prepare everything for the next game
 function reset(resetPlayers) {
+    var doSetup = true;
     if (resetPlayers === 'scoreAndId') {
         player1 = {socketId: '', score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
         player2 = {socketId: '', score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
+        doSetup = false;
     } else if (resetPlayers === 'score') {
         player1 = {socketId: player1.socketId, score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
         player2 = {socketId: player2.socketId, score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
@@ -280,7 +237,13 @@ function reset(resetPlayers) {
     top_of_draw_pile = '';
     player_array = [player1, player2];
     turn = true;
-    // TODO: Reshuffle draw pile
+
+    if (doSetup) {
+        shuffleDeckAndAssign();
+        updateAllCards();
+        discard_pile = draw_pile.shift();
+        toEveryone('receiveDiscardCard', discard_pile);
+    }
 }
 
 // Calculate scores, notify players, and reset
@@ -461,8 +424,5 @@ function calculateScore(card_scores) {
 }
 
 
-// Key difference between socket.emit() and io.emit():
-//      - socket.emit()     = Only one socket will receive the message
-//      - io.emit()   = ALL connected sockets will receive the message
-
-// socket.broadcast.emit()  = Goes to everyone but the sender
+// Mason Stooksbury (2020)
+// <><
