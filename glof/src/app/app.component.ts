@@ -12,8 +12,6 @@ export class AppComponent implements OnInit, AfterViewInit {
 	context: any;
 	socket: any;
 
-	card_theme = 'assets/Test_Card_Smoller.png';
-
 	startGame = false;
 
 	message = '';
@@ -45,10 +43,11 @@ export class AppComponent implements OnInit, AfterViewInit {
 	gameOver = false;
 
 
-	constructor(private gameService: GameService) { }
+	constructor() { }
 
 	public ngOnInit() {
 		this.socket = io('http://localhost:709');
+		this.initializeAllCards('');
 	}
 
 	public ngAfterViewInit() {
@@ -201,5 +200,22 @@ export class AppComponent implements OnInit, AfterViewInit {
 	public reset(action: string) {
 		console.log('reset');
 		this.socket.emit(action);
+	}
+
+	public changeCardImage(card: string, image: string, index?: number) {
+		let string_thing = `${card}_card`;
+		string_thing += index || index === 0 ? `_${index}` : '';
+		const card_to_change = document.getElementById(string_thing) as HTMLImageElement;
+		card_to_change.src = image;
+	}
+
+	public initializeAllCards(image: string) {
+		image = 'assets/Backs/Psychedelic.png';
+		for (let num = 0; num < 6; num++) {
+			this.changeCardImage('their', image, num);
+			this.changeCardImage('my', image, num);
+		}
+		this.changeCardImage('discard', image);
+		this.changeCardImage('draw', image);
 	}
 }
