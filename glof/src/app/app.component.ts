@@ -59,6 +59,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 			this.startGame = true;
 			console.log(`discard card from start game: ${data}`);
 			this.topDiscardCard = data;
+			this.changeCardImage('discard', `assets/Fronts/${data}.png`);
 			// Once the game has started, allow the players to pick two cards
 			this.chooseTwoPhase = true;
 		})
@@ -68,19 +69,27 @@ export class AppComponent implements OnInit, AfterViewInit {
 		})
 		this.socket.on('receiveCard', data => {
 			this.my_cards[data.index] = data.card;
+			this.changeCardImage('my', `assets/Fronts/${data.card}.png`, data.index);
 		})
 		this.socket.on('receiveOtherCards', data => {
 			// Set their display deck to what I got from the server
 			console.log(`OTHER: ${data}`);
 			this.their_cards = [...data];
+			this.their_cards.forEach((item, index) => {
+				this.changeCardImage('their', `assets/Fronts/${item}.png`, index);
+			});
 		})
 		this.socket.on('updateCards', data => {
 			this.my_cards = [...data];
 			console.log(`MINE: ${this.my_cards}`);
+			this.my_cards.forEach((item, index) => {
+				this.changeCardImage('my', `assets/Fronts/${item}.png`, index);
+			});
 		})
 		this.socket.on('receiveDrawCard', data => {
 			console.log(`draw card: ${data}`);
 			this.topDrawCard = data;
+			this.changeCardImage('draw', `assets/Fronts/${data}.png`);
 		})
 		// Receive top Discard card from the server
 		// This happens on replace and discard so it is a good place to reset
@@ -88,6 +97,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 		this.socket.on('receiveDiscardCard', data => {
 			console.log(`discard card: ${data}`);
 			this.topDiscardCard = data;
+			this.changeCardImage('discard', `assets/Fronts/${data}.png`);
 			this.cardDrawnFromDiscardPile = false;
 			this.cardDrawnFromDrawPile = false;
 		})
@@ -210,7 +220,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 	}
 
 	public initializeAllCards(image: string) {
-		image = 'assets/Backs/Psychedelic.png';
+		image = 'assets/Backs/MS.png';
 		for (let num = 0; num < 6; num++) {
 			this.changeCardImage('their', image, num);
 			this.changeCardImage('my', image, num);
