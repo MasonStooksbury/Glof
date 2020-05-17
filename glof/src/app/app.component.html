@@ -5,7 +5,7 @@
 			<span>Welcome to the main menu, Player {{player_id}}!</span>
 			<span>Feel free to change your card theme and color!</span>
 			<span>When you're done, press "I'm ready!"</span>
-			<button class='buffered-top' (click)='readyUp()'>I'm Ready!</button>
+			<button class='buffered-top' (click)='readyUp()'>{{readyButtonText}}</button>
 		</div>
 	</p-panel>
 
@@ -99,7 +99,7 @@
 
 
 <!-- A dialog of whether they won or lost -->
-<p-dialog header='{{headerMessage}}' (onHide)='showDialog = false' [(visible)]='showDialog' [modal]='true' [blockScroll]='true'>
+<p-dialog header='{{headerMessage}}' [closable]='false' (onHide)='showDialog = false' [(visible)]='showDialog' [modal]='true' [blockScroll]='true'>
 	<!-- Insert meme here -->
 	<!-- <p-button></p-button> -->
 	<span>Player 1: {{player1Score}}</span>

@@ -14,6 +14,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 
 	startGame = false;
 
+	readyButtonText = "I'm ready!";
 	message = '';
 	player_id = '';
 	headerMessage = '';
@@ -42,12 +43,14 @@ export class AppComponent implements OnInit, AfterViewInit {
 
 	gameOver = false;
 
+	cardBackImage = 'assets/Backs/MS.png';
+
 
 	constructor() { }
 
 	public ngOnInit() {
 		this.socket = io('http://localhost:709');
-		this.initializeAllCards('');
+		this.initializeAllCards(this.cardBackImage);
 	}
 
 	public ngAfterViewInit() {
@@ -76,14 +79,18 @@ export class AppComponent implements OnInit, AfterViewInit {
 			console.log(`OTHER: ${data}`);
 			this.their_cards = [...data];
 			this.their_cards.forEach((item, index) => {
-				this.changeCardImage('their', `assets/Fronts/${item}.png`, index);
+				if (item !== ''){
+					this.changeCardImage('their', `assets/Fronts/${item}.png`, index);
+				}
 			});
 		})
 		this.socket.on('updateCards', data => {
 			this.my_cards = [...data];
 			console.log(`MINE: ${this.my_cards}`);
 			this.my_cards.forEach((item, index) => {
-				this.changeCardImage('my', `assets/Fronts/${item}.png`, index);
+				if (item !== ''){
+					this.changeCardImage('my', `assets/Fronts/${item}.png`, index);
+				}
 			});
 		})
 		this.socket.on('receiveDrawCard', data => {
@@ -127,6 +134,9 @@ export class AppComponent implements OnInit, AfterViewInit {
 			this.player2Score = data.p2Score;
 			this.showDialog = true;
 		})
+		this.socket.on('revealCards', data => {
+			this.revealAllCards(data.yours, data.theirs);
+		})
 		this.socket.on('roundSummary', data => {
 			console.log('round summary');
 			this.headerMessage = data.message;
@@ -140,6 +150,9 @@ export class AppComponent implements OnInit, AfterViewInit {
 			this.chooseTwoPhase = true;
 			this.turnsPhase = false;
 
+			this.initializeAllCards(this.cardBackImage);
+			this.changeCardImage('discard', `assets/Fronts/${this.topDiscardCard}.png`);
+
 			this.topDrawCard = '';
 			console.log(`draw card: ${this.cardDrawnFromDrawPile}`);
 			console.log(`topdraw card: ${this.topDrawCard}`);
@@ -148,6 +161,8 @@ export class AppComponent implements OnInit, AfterViewInit {
 		})
 		this.socket.on('nextGameStart', data => {
 			console.log('next game!');
+			this.initializeAllCards(this.cardBackImage);
+			this.changeCardImage('discard', `assets/Fronts/${this.topDiscardCard}.png`);
 			this.showDialog = false;
 			this.gameOver = false;
 			this.player1Score = 0;
@@ -169,6 +184,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 
 	public readyUp() {
 		this.socket.emit('playerReadyUp');
+		this.readyButtonText = 'Waiting...';
 	}
 
 	// This is only used during the Card-Choosing phase
@@ -195,6 +211,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 	public discardCard() {
 		if (this.turnsPhase && this.cardDrawnFromDrawPile) {
 			this.socket.emit('playerTurn', {action: 'discard', data: this.topDrawCard});
+			this.changeCardImage('draw', this.cardBackImage);
 		}
 	}
 
@@ -204,6 +221,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 		if (this.turnsPhase && this.cardDrawnFromDrawPile ||
 			this.turnsPhase && this.cardDrawnFromDiscardPile) {
 			this.socket.emit('playerTurn', {action: 'replace', data: cardIndex, fromDiscardOrNah: this.cardDrawnFromDiscardPile})
+			this.changeCardImage('draw', this.cardBackImage);
 		}
 	}
 
@@ -220,12 +238,20 @@ export class AppComponent implements OnInit, AfterViewInit {
 	}
 
 	public initializeAllCards(image: string) {
-		image = 'assets/Backs/MS.png';
 		for (let num = 0; num < 6; num++) {
 			this.changeCardImage('their', image, num);
 			this.changeCardImage('my', image, num);
 		}
 		this.changeCardImage('discard', image);
 		this.changeCardImage('draw', image);
+	}
+
+	public revealAllCards(myCards, theirCards) {
+		myCards.forEach((item, index) => {
+			this.changeCardImage('my', `assets/Fronts/${item}.png`, index);
+		});
+		theirCards.forEach((item, index) => {
+			this.changeCardImage('their', `assets/Fronts/${item}.png`, index);
+		});
 	}
 }

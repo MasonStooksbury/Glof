@@ -29,6 +29,8 @@ var player_array = [];
 // i.e.  'true' if it is player 1's turn, 'false' if not
 var turn = true;
 
+var player1Start = true;
+
 // Probably an architectural nightmare, but basically this gets changed all the time
 //      to whatever the current socket is. That way, I don't have to pass it to
 //      my socket wrapper methods
@@ -92,7 +94,11 @@ io.on('connection', (socket) => {
 
             // End the choose-2 phase and begin the main game
             toEveryone('startTurns', true);
-            toSpecificSocket({id: player1.socketId, method: 'notifyTurn', message: 'Your turn!'});
+            if (turn) {
+                toSpecificSocket({id: player1.socketId, method: 'notifyTurn', message: 'Your turn!'});
+            } else {
+                toSpecificSocket({id: player2.socketId, method: 'notifyTurn', message: 'Your turn!'});
+            }
         }
     })
 
@@ -203,7 +209,6 @@ function changeTurn(current_player) {
     }
 }
 
-
 // Update all hands and display cards
 function updateAllCards() {
     toSpecificSocket({id: player1.socketId, method: 'receiveOtherCards', message: player2.display_cards});
@@ -213,7 +218,6 @@ function updateAllCards() {
     toSpecificSocket({id: player2.socketId, method: 'updateCards', message: player2.display_cards});
 }
 
-
 // Prepare everything for the next game
 function reset(resetPlayers) {
     var doSetup = true;
@@ -221,6 +225,8 @@ function reset(resetPlayers) {
         player1 = {socketId: '', score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
         player2 = {socketId: '', score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
         doSetup = false;
+        player1Start = true;
+        turn = true;
     } else if (resetPlayers === 'score') {
         player1 = {socketId: player1.socketId, score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
         player2 = {socketId: player2.socketId, score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
@@ -236,7 +242,9 @@ function reset(resetPlayers) {
     discard_pile = '';
     top_of_draw_pile = '';
     player_array = [player1, player2];
-    turn = true;
+
+    turn = player1Start ? false : true;
+    player1Start = player1Start ? false : true;
 
     if (doSetup) {
         shuffleDeckAndAssign();
@@ -257,6 +265,8 @@ function endGame() {
     } else if (player2.score > player1.score && player2.score >= 100) {
         toEveryone('announceWinner', {message: 'Player 2 Wins!', p1Score: player1.score, p2Score: player2.score})
     } else {
+        toSpecificSocket({id: player1.socketId, method: 'revealCards', message: {yours: player1.cards, theirs: player2.cards}});
+        toSpecificSocket({id: player2.socketId, method: 'revealCards', message: {yours: player2.cards, theirs: player1.cards}});
         toEveryone('roundSummary', {message: 'Round Summary', p1Score: player1.score, p2Score: player2.score});
     }
 }
@@ -290,6 +300,7 @@ function toSpecificSocket(data) {
 
 
 
+
 function shuffleDeckAndAssign() {
     draw_pile = [...cards];
     for(let i = draw_pile.length - 1; i > 0; i--) {
@@ -317,7 +328,6 @@ function shuffleDeckAndAssign() {
     console.log('player 2 cards');
     console.log(player2.cards);
 }
-
 
 function getCardValuesList(card_list) {
     card_scores = [];
@@ -373,17 +383,21 @@ function calculateScore(card_scores) {
     ];
 
     // Check for blocks
-    if (columns[0][0] === columns[0][1] && columns[1][0] === columns[1][1]) {
+    if (columns[0][0] === columns[0][1] && columns[1][0] === columns[1][1] && 
+        columns[0][0] === columns[1][0] && columns[0][1] === columns[1][1]) {
         blockPosition = 2;
         player_total_score -= 25;
-    } else if (columns[1][0] === columns[1][1] && columns[2][0] === columns[2][1]) {
+    } else if (columns[1][0] === columns[1][1] && columns[2][0] === columns[2][1] &&
+                columns[1][0] === columns[2][0] && columns[1][1] === columns[2][1]) {
         blockPosition = 0;
         player_total_score -= 25;
     }
 
     // If there is a block (2x2 of the same card), then check the last remaining column
     if (blockPosition != 1) {
-        if (columns[blockPosition].includes(2) && columns[blockPosition].includes(-25)) {
+        if (columns[blockPosition][0] === -25 && columns[blockPosition][1] === -25) {
+            player_total_score -= 50;
+        } else if (columns[blockPosition].includes(2) && columns[blockPosition].includes(-25)) {
             player_total_score -= 25;
         } else if (columns[blockPosition].includes(2) || (columns[blockPosition][0] === columns[blockPosition][1])) {
             player_total_score += 0;
@@ -402,6 +416,17 @@ function calculateScore(card_scores) {
     // Otherwise, since there are no blocks, calculate each column collectively
     else {
         columns.forEach(item => {
+            if (item.includes(-25)) {
+                count = 0;
+                item.forEach(elem => {
+                    if (elem === -25) {
+                        count += 1;
+                    }
+                });
+                if (count === 2) {
+                    player_total_score -= 50;
+                }
+            }
             if (item.includes(2) && item.includes(-25)) {
                 player_total_score -= 25;
             } else if (item.includes(2) || (item[0] === item[1])) {
