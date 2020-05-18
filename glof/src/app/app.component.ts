@@ -21,7 +21,13 @@ export class AppComponent implements OnInit, AfterViewInit {
 	winningPlayer = '';
 	otherText = '';
 	showDialog = false;
-	showTurnDialog = false;
+	// showTurnDialog = false;
+	theirTurn = 'is-turn';
+	myTurn = '';
+	isSelected = '';
+	topDiscardCard = '';
+	topDrawCard = '';
+	drawPileCount = 0;
 
 	// Each card will start off as an empty string
 	my_cards = ['', '', '', '', '', ''];
@@ -35,13 +41,13 @@ export class AppComponent implements OnInit, AfterViewInit {
 	cardDrawnFromDrawPile = false;
 	cardDrawnFromDiscardPile = false;
 
-	topDiscardCard = '';
-	topDrawCard = ''
-
 	player1Score = 0;
 	player2Score = 0;
 
 	gameOver = false;
+
+	isDrawSelected = '';
+	isDiscardSelected = '';
 
 	cardBackImage = 'assets/Backs/MS.png';
 
@@ -49,7 +55,8 @@ export class AppComponent implements OnInit, AfterViewInit {
 	constructor() { }
 
 	public ngOnInit() {
-		this.socket = io('http://localhost:709');
+		// this.socket = io('http://localhost:709');
+		this.socket = io('http://192.168.1.11:709');
 		this.initializeAllCards(this.cardBackImage);
 	}
 
@@ -107,19 +114,28 @@ export class AppComponent implements OnInit, AfterViewInit {
 			this.changeCardImage('discard', `assets/Fronts/${data}.png`);
 			this.cardDrawnFromDiscardPile = false;
 			this.cardDrawnFromDrawPile = false;
+			this.isDrawSelected = '';
+			this.isDiscardSelected = '';
+		})
+		this.socket.on('updateDrawPileCount', data => {
+			this.drawPileCount = data;
 		})
 		this.socket.on('notifyTurn', data => {
-			console.log(`show dialog ${this.showTurnDialog}`);
-			console.log(`notifyTurn: ${data}`);
-			this.headerMessage = data;
-			this.showTurnDialog = true;
+			// console.log(`show dialog ${this.showTurnDialog}`);
+			// console.log(`notifyTurn: ${data}`);
+			// this.headerMessage = data;
+			// this.showTurnDialog = true;
+			this.myTurn = 'is-turn';
+			this.theirTurn = '';
 		})
 		//a;lsfjkd
 		this.socket.on('notifyLastTurn', data => {
 			console.log('FINAL TURN');
 			// Use turn dialog
-			this.headerMessage = data;
-			this.showTurnDialog = true;
+			// this.headerMessage = data;
+			// this.showTurnDialog = true;
+			this.myTurn = 'is-turn';
+			this.theirTurn = '';
 			// Change message
 			// Change meme
 		})
@@ -198,6 +214,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 		if (this.turnsPhase && !this.cardDrawnFromDrawPile && !this.cardDrawnFromDiscardPile) {
 			this.socket.emit('playerTurn', {action: 'drawFromDrawPile'});
 			this.cardDrawnFromDrawPile = true;
+			this.isDrawSelected = 'selected';
 		}
 	}
 
@@ -205,6 +222,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 		if (this.turnsPhase && !this.cardDrawnFromDiscardPile && !this.cardDrawnFromDrawPile) {
 			this.cardDrawnFromDiscardPile = true;
 			console.log(`you picked up the ${this.topDiscardCard} from discard`);
+			this.isDiscardSelected = 'selected';
 		}
 	}
 
@@ -212,6 +230,9 @@ export class AppComponent implements OnInit, AfterViewInit {
 		if (this.turnsPhase && this.cardDrawnFromDrawPile) {
 			this.socket.emit('playerTurn', {action: 'discard', data: this.topDrawCard});
 			this.changeCardImage('draw', this.cardBackImage);
+			this.isDiscardSelected = 'selected';
+			this.myTurn = '';
+			this.theirTurn = 'is-turn';
 		}
 	}
 
@@ -222,6 +243,8 @@ export class AppComponent implements OnInit, AfterViewInit {
 			this.turnsPhase && this.cardDrawnFromDiscardPile) {
 			this.socket.emit('playerTurn', {action: 'replace', data: cardIndex, fromDiscardOrNah: this.cardDrawnFromDiscardPile})
 			this.changeCardImage('draw', this.cardBackImage);
+			this.myTurn = '';
+			this.theirTurn = 'is-turn';
 		}
 	}
 

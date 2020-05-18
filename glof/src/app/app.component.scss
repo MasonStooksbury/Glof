@@ -11,6 +11,10 @@
     }
 }
 
+.selected {
+    border: 3px solid fuchsia;
+}
+
 .middle-card {
     margin-left: 1em;
     margin-right: 1em;
@@ -18,4 +22,8 @@
 
 .draw-pile {
     margin-left: 3em;
+}
+
+.is-turn {
+    background-color: cornflowerblue;
 }

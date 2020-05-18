@@ -3,8 +3,9 @@
 	<p-panel *ngIf='!startGame'>
 		<div class='row justify-content-center'>
 			<span>Welcome to the main menu, Player {{player_id}}!</span>
-			<span>Feel free to change your card theme and color!</span>
-			<span>When you're done, press "I'm ready!"</span>
+			<!-- <span>Feel free to change your card theme and color!</span> -->
+			<!-- <span>When you're done, press "I'm ready!"</span> -->
+			<span>To start, press "I'm ready!"</span>
 			<button class='buffered-top' (click)='readyUp()'>{{readyButtonText}}</button>
 		</div>
 	</p-panel>
@@ -17,7 +18,7 @@
 		<h3>Welcome, Player {{player_id}}!</h3>
 		<div class='row justify-content-center'>
 			<!-- Other player's cards -->
-			<div class='p-col-6 p-offset-3 p-lg-4 p-lg-offset-4 buffered-top their-cards'>
+			<div class='p-col-6 p-offset-3 p-lg-4 p-lg-offset-4 buffered-top their-cards {{theirTurn}}'>
 				<div class="p-grid p-justify-center">
 					<!-- 5 -->
 					<div class="p-col-3 p-lg-2">
@@ -54,21 +55,21 @@
 			<div class='p-col-6 p-offset-3 p-lg-4 p-lg-offset-4 draw-discard-piles'>
 				<div class="p-grid p-justify-center">
 					<!-- Discard -->
-					<div class="p-col-3 p-lg-2">
+					<div class="p-col-3 p-lg-2 {{isDiscardSelected}}">
 						<a (click)='discardCard(); drawCardFromDiscardPile()'><img id='discard_card' src='' width='100%' height='100%'></a>
 						<label>Discard</label>
 					</div>
 					<!-- Draw -->
-					<div class="p-col-3 p-lg-2 draw-pile">
+					<div class="p-col-3 p-lg-2 {{isDrawSelected}} draw-pile">
 						<a (click)='drawCardFromDrawPile()'><img id='draw_card' src='' width='100%' height='100%'></a>
-						<label>Draw</label>
+						<label>Draw (Left: {{drawPileCount}})</label>
 					</div>
 				</div>
 			</div>
 		</div>
 		<div class='row buffered-top justify-content-center'>
 			<!-- My cards -->
-			<div class='p-col-6 p-offset-3 p-lg-4 p-lg-offset-4 my-cards'>
+			<div class='p-col-6 p-offset-3 p-lg-4 p-lg-offset-4 my-cards {{myTurn}}'>
 				<div class="p-grid p-justify-center">
 					<div class="p-col-3 p-lg-2">
 						<a (click)='chooseCard(0); replaceCard(0)'><img id='my_card_0' src='' width='100%' height='100%'></a>
@@ -109,7 +110,7 @@
 </p-dialog>
 
 <!-- Turn dialog -->
-<p-dialog header='{{headerMessage}}' (onHide)='showTurnDialog = false' [(visible)]='showTurnDialog' [modal]='true' [blockScroll]='true'>
+<!-- <p-dialog header='{{headerMessage}}' (onHide)='showTurnDialog = false' [(visible)]='showTurnDialog' [modal]='true' [blockScroll]='true'> -->
 	<!-- Insert meme here -->
 	<!-- <p-button></p-button> -->
-</p-dialog>
+<!-- </p-dialog> -->

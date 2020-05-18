@@ -20,8 +20,8 @@ var draw_pile = [];
 var discard_pile = '';
 var top_of_draw_pile = '';
 
-var player1 = {socketId: '', isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
-var player2 = {socketId: '', isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
+var player1 = {socketId: '', score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
+var player2 = {socketId: '', score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
 var players = 0;
 var player_array = [];
 
@@ -63,6 +63,7 @@ io.on('connection', (socket) => {
             shuffleDeckAndAssign();
             // Assign players their cards
             discard_pile = draw_pile.shift();
+            toEveryone('updateDrawPileCount', draw_pile.length)
             toEveryone('startGame', discard_pile);
         }
     })
@@ -112,6 +113,7 @@ io.on('connection', (socket) => {
                 console.log('card drawn');
                 top_of_draw_pile = draw_pile.shift()
                 toSender('receiveDrawCard', top_of_draw_pile);
+                toEveryone('updateDrawPileCount', draw_pile.length)
             } else if (data.action === 'replace') {
                 console.log('card replaced');
 
@@ -258,15 +260,14 @@ function reset(resetPlayers) {
 function endGame() {
     setScores();
 
-    // TODO: Change scores here and make sure these branches work
+    toSpecificSocket({id: player1.socketId, method: 'revealCards', message: {yours: player1.cards, theirs: player2.cards}});
+    toSpecificSocket({id: player2.socketId, method: 'revealCards', message: {yours: player2.cards, theirs: player1.cards}});
 
-    if (player1.score > player2.score && player1.score >= 100) {
+    if (player1.score < player2.score && player1.score <= -100) {
         toEveryone('announceWinner', {message: 'Player 1 Wins!', p1Score: player1.score, p2Score: player2.score})
-    } else if (player2.score > player1.score && player2.score >= 100) {
+    } else if (player2.score < player1.score && player2.score <= -100) {
         toEveryone('announceWinner', {message: 'Player 2 Wins!', p1Score: player1.score, p2Score: player2.score})
     } else {
-        toSpecificSocket({id: player1.socketId, method: 'revealCards', message: {yours: player1.cards, theirs: player2.cards}});
-        toSpecificSocket({id: player2.socketId, method: 'revealCards', message: {yours: player2.cards, theirs: player1.cards}});
         toEveryone('roundSummary', {message: 'Round Summary', p1Score: player1.score, p2Score: player2.score});
     }
 }
@@ -368,8 +369,10 @@ function setScores() {
     console.log('\n\n\n\n');
 
 
-    player1.score = calculateScore(getCardValuesList(player1.cards));
-    player2.score = calculateScore(getCardValuesList(player2.cards));
+    player1.score += calculateScore(getCardValuesList(player1.cards));
+    player2.score += calculateScore(getCardValuesList(player2.cards));
+    console.log(player1.score);
+    console.log(player2.score);
 }
 
 function calculateScore(card_scores) {
