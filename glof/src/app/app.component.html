@@ -16,9 +16,9 @@
 	<!-- <p-panel *ngIf='startGame'> -->
 	<p-panel [style.display]="startGame ? 'block' : 'none'">
 		<h3>Welcome, Player {{player_id}}!</h3>
-		<div class='row justify-content-center'>
+		<div class='row justify-content-center {{theirTurn}}'>
 			<!-- Other player's cards -->
-			<div class='p-col-6 p-offset-3 p-lg-4 p-lg-offset-4 buffered-top their-cards {{theirTurn}}'>
+			<div class='p-col-6 p-offset-3 p-lg-4 p-lg-offset-4 buffered-top their-cards'>
 				<div class="p-grid p-justify-center">
 					<!-- 5 -->
 					<div class="p-col-3 p-lg-2">
@@ -53,7 +53,7 @@
 		<div class='row justify-content-center'>
 			<!-- Draw/Discard piles -->
 			<div class='p-col-6 p-offset-3 p-lg-4 p-lg-offset-4 draw-discard-piles'>
-				<div class="p-grid p-justify-center">
+				<div class="p-grid p-justify-end">
 					<!-- Discard -->
 					<div class="p-col-3 p-lg-2 {{isDiscardSelected}}">
 						<a (click)='discardCard(); drawCardFromDiscardPile()'><img id='discard_card' src='' width='100%' height='100%'></a>
@@ -62,14 +62,15 @@
 					<!-- Draw -->
 					<div class="p-col-3 p-lg-2 {{isDrawSelected}} draw-pile">
 						<a (click)='drawCardFromDrawPile()'><img id='draw_card' src='' width='100%' height='100%'></a>
-						<label>Draw (Left: {{drawPileCount}})</label>
+						<label>Draw</label>
 					</div>
+					<div class='p-col-2 p-col-align-center'><span>Cards left: {{drawPileCount}}</span></div>
 				</div>
 			</div>
 		</div>
-		<div class='row buffered-top justify-content-center'>
+		<div class='row buffered-top justify-content-center {{myTurn}}'>
 			<!-- My cards -->
-			<div class='p-col-6 p-offset-3 p-lg-4 p-lg-offset-4 my-cards {{myTurn}}'>
+			<div class='p-col-6 p-offset-3 p-lg-4 p-lg-offset-4 my-cards'>
 				<div class="p-grid p-justify-center">
 					<div class="p-col-3 p-lg-2">
 						<a (click)='chooseCard(0); replaceCard(0)'><img id='my_card_0' src='' width='100%' height='100%'></a>
@@ -110,7 +111,7 @@
 </p-dialog>
 
 <!-- Turn dialog -->
-<!-- <p-dialog header='{{headerMessage}}' (onHide)='showTurnDialog = false' [(visible)]='showTurnDialog' [modal]='true' [blockScroll]='true'> -->
+<p-dialog header='{{headerMessage}}' (onHide)='showTurnDialog = false' [(visible)]='showTurnDialog' [modal]='true' [blockScroll]='true'>
 	<!-- Insert meme here -->
 	<!-- <p-button></p-button> -->
-<!-- </p-dialog> -->
+</p-dialog>

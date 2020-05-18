@@ -21,7 +21,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 	winningPlayer = '';
 	otherText = '';
 	showDialog = false;
-	// showTurnDialog = false;
+	showTurnDialog = false;
 	theirTurn = 'is-turn';
 	myTurn = '';
 	isSelected = '';
@@ -132,8 +132,8 @@ export class AppComponent implements OnInit, AfterViewInit {
 		this.socket.on('notifyLastTurn', data => {
 			console.log('FINAL TURN');
 			// Use turn dialog
-			// this.headerMessage = data;
-			// this.showTurnDialog = true;
+			this.headerMessage = data;
+			this.showTurnDialog = true;
 			this.myTurn = 'is-turn';
 			this.theirTurn = '';
 			// Change message

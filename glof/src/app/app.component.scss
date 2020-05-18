@@ -11,6 +11,15 @@
     }
 }
 
+.p-lg-2 {
+    padding: 0;
+    border: 1px solid black;
+    margin-top: 1em;
+    &:hover {
+        border: 3px solid fuchsia;
+    }
+}
+
 .selected {
     border: 3px solid fuchsia;
 }
@@ -21,7 +30,8 @@
 }
 
 .draw-pile {
-    margin-left: 3em;
+    margin-left: 1.5em;
+    margin-right: .5em;
 }
 
 .is-turn {
