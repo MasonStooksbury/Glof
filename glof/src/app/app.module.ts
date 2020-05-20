@@ -4,6 +4,8 @@ import { NgModule } from '@angular/core';
 import { DialogModule } from 'primeng/dialog'
 import { ButtonModule } from 'primeng/button';
 import { PanelModule } from 'primeng/panel';
+import { SelectButtonModule } from 'primeng/selectbutton';
+import { FormsModule } from '@angular/forms';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -18,7 +20,9 @@ import { AppComponent } from './app.component';
     AppRoutingModule,
     DialogModule,
     ButtonModule,
-    PanelModule
+    PanelModule,
+    SelectButtonModule,
+    FormsModule
   ],
   providers: [],
   bootstrap: [AppComponent]

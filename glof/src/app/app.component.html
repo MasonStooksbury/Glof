@@ -3,10 +3,24 @@
 	<p-panel *ngIf='!startGame'>
 		<div class='row justify-content-center'>
 			<span>Welcome to the main menu, Player {{player_id}}!</span>
-			<!-- <span>Feel free to change your card theme and color!</span> -->
-			<!-- <span>When you're done, press "I'm ready!"</span> -->
-			<span>To start, press "I'm ready!"</span>
+			<span>Feel free to change your card theme.</span>
+			<span>When you're done, press "I'm ready!"</span>
+			<!-- <span>To start, press "I'm ready!"</span> -->
 			<button class='buffered-top' (click)='readyUp()'>{{readyButtonText}}</button>
+		</div>
+
+		<div class='row justify-content-center'>
+			<div class="p-col-6 p-offset-3 p-lg-4 p-lg-offset-4 buffered-top">
+				<div class='p-grid p-justify-center'>
+					<div class='col-sm-3 clean'>
+						<span>Choose card theme:</span>
+						<p-selectButton [options]='cardBackImages' [(ngModel)]='cardBackImage' (onChange)='changeCardImage("preview", $event.value)'></p-selectButton>
+					</div>
+					<div class='col-sm-3 buffered-left'>
+						<img id='preview_card' src='' width='100%' height='100%'>
+					</div>
+				</div>
+			</div>
 		</div>
 	</p-panel>
 

@@ -49,23 +49,30 @@ export class AppComponent implements OnInit, AfterViewInit {
 	isDrawSelected = '';
 	isDiscardSelected = '';
 
-	cardBackImage = 'assets/Backs/MS.png';
+	cardBackImages = [
+		{label: 'StainedGlass', value: 'assets/Backs/StainedGlass.png'},
+		{label: 'MS', value: 'assets/Backs/MS.png'},
+		{label: 'GlofTheGame', value: 'assets/Backs/GlofTheGame.png'},
+		{label: 'Psychedelic', value: 'assets/Backs/Psychedelic.png'}
+	];
 
+	cardBackImage = 'assets/Backs/GlofTheGame.png';
 
 	constructor() { }
 
 	public ngOnInit() {
 		// this.socket = io('http://localhost:709');
 		this.socket = io('http://192.168.1.11:709');
-		this.initializeAllCards(this.cardBackImage);
 	}
 
 	public ngAfterViewInit() {
 		this.socket.on('connection', data => {
 			this.message = data.message;
 			this.player_id = data.player_id;
+			this.changeCardImage('preview', this.cardBackImage);
 		})
 		this.socket.on('startGame', data => {
+			this.initializeAllCards(this.cardBackImage);
 			this.startGame = true;
 			console.log(`discard card from start game: ${data}`);
 			this.topDiscardCard = data;
@@ -256,6 +263,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 	public changeCardImage(card: string, image: string, index?: number) {
 		let string_thing = `${card}_card`;
 		string_thing += index || index === 0 ? `_${index}` : '';
+		console.log(this.cardBackImage);
 		const card_to_change = document.getElementById(string_thing) as HTMLImageElement;
 		card_to_change.src = image;
 	}

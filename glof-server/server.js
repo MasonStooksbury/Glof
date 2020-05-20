@@ -113,7 +113,7 @@ io.on('connection', (socket) => {
                 console.log('card drawn');
                 top_of_draw_pile = draw_pile.shift()
                 toSender('receiveDrawCard', top_of_draw_pile);
-                toEveryone('updateDrawPileCount', draw_pile.length)
+                toEveryone('updateDrawPileCount', draw_pile.length);
             } else if (data.action === 'replace') {
                 console.log('card replaced');
 
@@ -253,6 +253,7 @@ function reset(resetPlayers) {
         updateAllCards();
         discard_pile = draw_pile.shift();
         toEveryone('receiveDiscardCard', discard_pile);
+        toEveryone('updateDrawPileCount', draw_pile.length);
     }
 }
 
