@@ -62,7 +62,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 
 	public ngOnInit() {
 		// this.socket = io('http://localhost:709');
-		this.socket = io('http://192.168.1.11:709');
+		this.socket = io('http://192.168.1.9:709');
 	}
 
 	public ngAfterViewInit() {

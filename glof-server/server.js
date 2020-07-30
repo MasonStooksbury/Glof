@@ -289,15 +289,16 @@ function toSender(method, data) {
 
 function toEveryone(method, data) {
     io.emit(method, data);
+    //io.sockets.in('room1').emit('function', 'data1', 'data2');
+}
+
+function toSpecificSocket(data) {
+    io.to(data.id).emit(data.method, data.message);
 }
 
 // function toAllButSender(method, data) {
 //     socketReference.broadcast.emit(method, data);
 // }
-
-function toSpecificSocket(data) {
-    io.to(data.id).emit(data.method, data.message);
-}
 
 
 
