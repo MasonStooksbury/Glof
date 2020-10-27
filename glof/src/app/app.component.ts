@@ -13,6 +13,8 @@ export class AppComponent implements OnInit, AfterViewInit {
 	socket: any;
 
 	startGame = false;
+	mainMenu = false;
+	lobby = true;
 
 	readyButtonText = "I'm ready!";
 	message = '';
@@ -49,6 +51,8 @@ export class AppComponent implements OnInit, AfterViewInit {
 	isDrawSelected = '';
 	isDiscardSelected = '';
 
+	randomRoomId = 0;
+
 	cardBackImages = [
 		{label: 'StainedGlass', value: 'assets/Backs/StainedGlass.png'},
 		{label: 'MS', value: 'assets/Backs/MS.png'},
@@ -63,10 +67,13 @@ export class AppComponent implements OnInit, AfterViewInit {
 	public ngOnInit() {
 		// this.socket = io('http://localhost:709');
 		this.socket = io('http://192.168.1.9:709');
+		this.randomRoomId = Math.floor(Math.random()*(99999-10000+1)+10000);
 	}
 
 	public ngAfterViewInit() {
 		this.socket.on('connection', data => {
+			this.lobby = false;
+			this.mainMenu = true;
 			this.message = data.message;
 			this.player_id = data.player_id;
 			this.changeCardImage('preview', this.cardBackImage);
@@ -203,10 +210,29 @@ export class AppComponent implements OnInit, AfterViewInit {
 	// ########################## Actions ################################
 	// ###################################################################
 
+	public getInfo() {
+		this.socket.emit('getInfo');
+	}
 
+	public joinRoom(roomId) {
+		// if () {
+
+		// } else {
+
+		// }
+		console.log('hello');
+		console.log(roomId);
+		console.log('bai');
+		this.socket.emit('joinRoom', {room: roomId});
+	}
+
+	public openMainMenu() {
+		this.socket.emit('joinRoom', {room: this.randomRoomId});
+	}
 
 	public readyUp() {
 		this.socket.emit('playerReadyUp');
+		this.mainMenu = false;
 		this.readyButtonText = 'Waiting...';
 	}
 

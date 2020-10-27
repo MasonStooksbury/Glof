@@ -39,19 +39,58 @@ socketReference = {};
 io.on('connection', (socket) => {
     socketReference = socket;
 
-    // Assign players as they connect
-    if (player1.socketId === '') {
-        player1.socketId = socket.id;
-        player_array.push(player1);
-        console.log(`player 1 id: ${socket.id}`);
-        toSender('connection', {message: 'Welcome to Glof! You are Player 1', player_id: '1'});
-    } else {
-        player2.socketId = socket.id;
-        player_array.push(player2);
-        console.log(`player 2 id: ${socket.id}`);
-        toSender('connection', {message: 'Welcome to Glof! You are Player 2', player_id: '2'})
-    }
-    ++players;
+    // TODO: Yeet this
+    socket.on('getInfo', function() {
+        console.log(socket.id);
+        console.log(players);
+        console.log(player_array);
+        console.log(io.sockets.adapter.rooms);
+    });
+
+    socket.on('joinRoom', data => {
+        socketReference = socket;
+
+        var room = data.room;
+
+        if (typeof(room) === 'string') {
+            room = parseInt(room)
+        }
+
+        socket.join(room);
+
+        setUpRoom(room);
+
+        console.log('heller');
+        console.log(socket.id);
+        console.log(io.sockets.adapter.rooms[room]);
+        console.log(io.sockets.adapter.rooms[room].player1.socketId === '');
+        console.log(room);
+
+
+        // Assign players as they connect
+        if (io.sockets.adapter.rooms[room].player1.socketId === '') {
+            io.sockets.adapter.rooms[room].player1.socketId = socket.id;
+            io.sockets.adapter.rooms[room].player1.room = room;
+            io.sockets.adapter.rooms[room].player_array.push(player1);
+            console.log(`player 1 id: ${socket.id}`);
+            toSender('connection', {message: 'Welcome to Glof! You are Player 1', player_id: '1'});
+        } else {
+            io.sockets.adapter.rooms[room].player2.socketId = socket.id;
+            io.sockets.adapter.rooms[room].player2.room = room;
+            io.sockets.adapter.rooms[room].player_array.push(player2);
+            console.log(`player 2 id: ${socket.id}`);
+            toSender('connection', {message: 'Welcome to Glof! You are Player 2', player_id: '2'})
+        }
+        io.sockets.adapter.rooms[room].players++;
+
+        console.log('heller');
+        console.log(io.sockets.adapter.rooms[room]);
+        console.log(io.sockets.adapter.rooms[room].player1.socketId === '');
+        console.log(room);
+
+        // STOP HERE. FIX ABOVE
+    })
+
 
     // This triggers whenever a player hits the ready up button.
     socket.on('playerReadyUp', function() {
@@ -287,9 +326,9 @@ function toSender(method, data) {
     socketReference.emit(method, data)
 }
 
-function toEveryone(method, data) {
-    io.emit(method, data);
-    //io.sockets.in('room1').emit('function', 'data1', 'data2');
+function toEveryone(room, method, data) {
+    // io.emit(method, data);
+    io.sockets.in(room).emit(method, data);
 }
 
 function toSpecificSocket(data) {
@@ -302,7 +341,35 @@ function toSpecificSocket(data) {
 
 
 
+function setUpRoom(roomId) {
+    // The available deck of cards plus both Jokers (Z1 and Z2)
+    io.sockets.adapter.rooms[roomId].cards = ['DA', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10', 'DJ', 'DQ', 'DK',
+    'SA', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'SJ', 'SQ', 'SK',
+    'HA', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'H8', 'H9', 'H10', 'HJ', 'HQ', 'HK',
+    'CA', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10', 'CJ', 'CQ', 'CK',
+    'Z1', 'Z2'
+    ];
 
+    io.sockets.adapter.rooms[roomId].draw_pile = [];
+    io.sockets.adapter.rooms[roomId].discard_pile = '';
+    io.sockets.adapter.rooms[roomId].top_of_draw_pile = '';
+
+    io.sockets.adapter.rooms[roomId].player1 = {socketId: '', room: 0, score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
+    io.sockets.adapter.rooms[roomId].player2 = {socketId: '', room: 0, score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
+    io.sockets.adapter.rooms[roomId].players = 0;
+    io.sockets.adapter.rooms[roomId].player_array = [];
+
+    // To make this easy, this will be in reference to player1
+    // i.e.  'true' if it is player 1's turn, 'false' if not
+    io.sockets.adapter.rooms[roomId].turn = true;
+
+    io.sockets.adapter.rooms[roomId].player1Start = true;
+
+    // Probably an architectural nightmare, but basically this gets changed all the time
+    //      to whatever the current socket is. That way, I don't have to pass it to
+    //      my socket wrapper methods
+    io.sockets.adapter.rooms[roomId].socketReference = {};
+    }
 
 function shuffleDeckAndAssign() {
     draw_pile = [...cards];

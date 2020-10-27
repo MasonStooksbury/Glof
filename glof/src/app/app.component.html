@@ -1,12 +1,26 @@
 <div class='row justify-content-center'>
+	<!-- Lobby -->
+	<p-panel *ngIf='lobby'>
+		<div class='row justify-content-center'>
+			<span>Welcome to Glof!</span>
+			
+			<input #roomId type='text'>
+			<button class='buffered-top' (click)='joinRoom(roomId.value)'>Join Room</button>
+			<button class='buffered-top' (click)='openMainMenu()'>Create Room</button>
+		</div>
+	</p-panel>
+
+
+
 	<!-- Main Menu -->
-	<p-panel *ngIf='!startGame'>
+	<p-panel *ngIf='mainMenu'>
 		<div class='row justify-content-center'>
 			<span>Welcome to the main menu, Player {{player_id}}!</span>
 			<span>Feel free to change your card theme.</span>
 			<span>When you're done, press "I'm ready!"</span>
 			<!-- <span>To start, press "I'm ready!"</span> -->
 			<button class='buffered-top' (click)='readyUp()'>{{readyButtonText}}</button>
+			<button class='buffered-top' (click)='getInfo()'>Info</button>
 		</div>
 
 		<div class='row justify-content-center'>
