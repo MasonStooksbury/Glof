@@ -266,7 +266,7 @@ function endGame() {
 
     if ((player1.score < player2.score && player1.score <= -100) || (player1.score < player2.score && player2.score >= 100)) {
         toEveryone('announceWinner', {message: 'Player 1 Wins!', p1Score: player1.score, p2Score: player2.score})
-    } else if ((player2.score < player1.score && player2.score <= -100) || (player2.score < player1.score && player1.score >= -100)) {
+    } else if ((player2.score < player1.score && player2.score <= -100) || (player2.score < player1.score && player1.score >= 100)) {
         toEveryone('announceWinner', {message: 'Player 2 Wins!', p1Score: player1.score, p2Score: player2.score})
     } else {
         toEveryone('roundSummary', {message: 'Round Summary', p1Score: player1.score, p2Score: player2.score});
