@@ -1,6 +1,6 @@
-# Flog
+# Glof
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 8.3.19.
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 8.3.19 (updated later to Angular 11).
 
 ## Development server
 
