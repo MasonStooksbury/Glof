@@ -124,10 +124,10 @@ io.on('connection', (socket) => {
             toSender('receiveCard', {card: current_player.display_cards[index], index: index});
         }
 
-        // Once both players have chosen their cards, send each player the opposing players display deck
+        // Once both players have chosen their cards, send each player the opposing player's display deck
         //      and begin the game
         if (player1.chosenCards === 2 && player2.chosenCards === 2) {
-            console.log('sent cards');
+            // console.log('sent cards');
             // Send each player the other person's cards
             toSpecificSocket({id: player1.socketId, method: 'receiveOtherCards', message: player2.display_cards});
             toSpecificSocket({id: player2.socketId, method: 'receiveOtherCards', message: player1.display_cards});
@@ -148,15 +148,20 @@ io.on('connection', (socket) => {
         // Only allow players to do things on their turn
         if (turn && socket.id === player1.socketId || !turn && socket.id === player2.socketId) {
             current_player = player_array.find(player => player.socketId === socket.id);
+            // If their action was to draw a card from the draw pile
             if (data.action === 'drawFromDrawPile') {
-                console.log('card drawn');
+                // console.log('card drawn');
+                // Take a card off the top of the draw pile and send it to the player
                 top_of_draw_pile = draw_pile.shift()
                 toSender('receiveDrawCard', top_of_draw_pile);
+                // Update the number of cards in the draw pile so everyone can see it
                 toEveryone('updateDrawPileCount', draw_pile.length);
-            } else if (data.action === 'replace') {
-                console.log('card replaced');
+            }
+            // Or if their action was to replace a card in their grid
+            else if (data.action === 'replace') {
+                // console.log('card replaced');
 
-                // Determine what the card that will be kept based on where it was drawn
+                // Did the new card come from the discard pile or the top of the draw pile?
                 new_card = data.fromDiscardOrNah ? discard_pile : top_of_draw_pile;
 
                 // Change the discard pile to be the player's old card
@@ -166,9 +171,9 @@ io.on('connection', (socket) => {
                 current_player.display_cards[data.data] = new_card;
                 current_player.cards[data.data] = new_card;
 
-                console.log(`discard pile: ${discard_pile}`);
-                console.log(`display cards: ${current_player.display_cards}`);
-                console.log(`cards: ${current_player.cards}`);
+                // console.log(`discard pile: ${discard_pile}`);
+                // console.log(`display cards: ${current_player.display_cards}`);
+                // console.log(`cards: ${current_player.cards}`);
 
                 // Send everyone their deck and their opponent's deck
                 updateAllCards();
@@ -178,8 +183,12 @@ io.on('connection', (socket) => {
                 // Change turns
                 changeTurn(current_player);
 
-            } else if (data.action === 'discard') {
-                console.log('card discarded');
+            }
+            // Or if their action was to discard a card
+            // I know, I know "mAsOn ThErE aRe OnLy ThReE oPtIoNs. JuSt UsE aN eLsE", I get it
+            //      Really the only reason I did this was for clarity; you're welcome
+            else if (data.action === 'discard') {
+                // console.log('card discarded');
                 discard_pile = top_of_draw_pile;
                 toEveryone('receiveDiscardCard', discard_pile);
 
@@ -188,25 +197,27 @@ io.on('connection', (socket) => {
         }
     });
 
-    // TODO: Reset game (shuffle, deal, trigger start)
-
+    // Trigger the next round
     socket.on('nextRound', function() {
         socketReference = socket;
+        // Only player 1 is allowed to do this
         if (socket.id === player1.socketId) {
             reset();
             toEveryone('nextRoundStart');
         }
     })
 
+    // Trigger a new game
     socket.on('newGame', function() {
         socketReference = socket;
+        // Only player 1 is allowed to do this
         if (socket.id === player1.socketId) {
             reset('score');
             toEveryone('nextGameStart');
         }
     })
 
-    
+    // If people leave, let's clean up the game and get it ready for when they want to play again
     socket.on('disconnect', function() {
         socketReference = socket;
         // Decrement the number of players as they leave
@@ -223,15 +234,20 @@ io.on('connection', (socket) => {
 
 // Change turns and update stuff
 function changeTurn(current_player) {
+    // If it's the last turn
     if (current_player.isLastTurn) {
-        console.log('last turn?');
+        // console.log('last turn?');
         endGame();
-    } else {
+    } 
+    // Otherwise, change turns
+    else {
+        // If there are no more face-down cards, get ready to warn the remaining players that it is their last turn
         if (!current_player.display_cards.includes('')) {
             player1.isLastTurn = true;
             player2.isLastTurn = true;
         }
 
+        // After player 1 is finished, warn player 2 or make it their turn
         if (turn && socketReference.id === player1.socketId) {
             turn = false;
             if (current_player.isLastTurn) {
@@ -239,7 +255,9 @@ function changeTurn(current_player) {
             } else {
                 toSpecificSocket({id: player2.socketId, method: 'notifyTurn', message: 'Your turn!'});
             }
-        } else if (!turn && socketReference.id === player2.socketId) {
+        } 
+        // Otherwise after player 2 is finished, warn player 1 or make it their turn
+        else if (!turn && socketReference.id === player2.socketId) {
             turn = true;
             if (current_player.isLastTurn) {
                 toSpecificSocket({id: player1.socketId, method: 'notifyLastTurn', message: 'Last turn!'});
@@ -275,10 +293,10 @@ function reset(resetPlayers) {
         player1 = {socketId: player1.socketId, score: player1.score, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
         player2 = {socketId: player2.socketId, score: player2.score, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
     }
-    console.log('player 1');
-    console.log(player1);
-    console.log('player 2');
-    console.log(player2);
+    // console.log('player 1');
+    // console.log(player1);
+    // console.log('player 2');
+    // console.log(player2);
     draw_pile = [];
     discard_pile = '';
     top_of_draw_pile = '';
@@ -303,20 +321,17 @@ function endGame() {
     toSpecificSocket({id: player1.socketId, method: 'revealCards', message: {yours: player1.cards, theirs: player2.cards}});
     toSpecificSocket({id: player2.socketId, method: 'revealCards', message: {yours: player2.cards, theirs: player1.cards}});
 
-    if (player1.score < player2.score && player1.score <= -100) {
+    if ((player1.score < player2.score && player1.score <= -100) || (player1.score < player2.score && player2.score >= 100)) {
         toEveryone('announceWinner', {message: 'Player 1 Wins!', p1Score: player1.score, p2Score: player2.score})
-    } else if (player2.score < player1.score && player2.score <= -100) {
+    } else if ((player2.score < player1.score && player2.score <= -100) || (player2.score < player1.score && player1.score >= 100)) {
         toEveryone('announceWinner', {message: 'Player 2 Wins!', p1Score: player1.score, p2Score: player2.score})
     } else {
         toEveryone('roundSummary', {message: 'Round Summary', p1Score: player1.score, p2Score: player2.score});
     }
 }
 
-// TODO: Yeet?
-// function sendScores() {
-//     toSpecificSocket({id: player1.socketId, method: 'roundSummary', message: player1.score});
-//     toSpecificSocket({id: player2.socketId, method: 'roundSummary', message: player2.score});
-// }
+
+
 
 
 // I realize they are simple commands, but I found myself not being able to quickly
@@ -335,6 +350,7 @@ function toSpecificSocket(data) {
     io.to(data.id).emit(data.method, data.message);
 }
 
+// I don't use this, but I'm gonna leave it in here for later just so I have it
 // function toAllButSender(method, data) {
 //     socketReference.broadcast.emit(method, data);
 // }
@@ -371,6 +387,7 @@ function setUpRoom(roomId) {
     io.sockets.adapter.rooms[roomId].socketReference = {};
     }
 
+// Shuffle the deck and give everyone their 6 cards from the top of the draw_pile
 function shuffleDeckAndAssign() {
     draw_pile = [...cards];
     for(let i = draw_pile.length - 1; i > 0; i--) {
@@ -380,25 +397,28 @@ function shuffleDeckAndAssign() {
         draw_pile[j] = temp
     }
 
-    console.log('cards');
-    console.log(cards);
-    console.log('\n\n\n\n');
-    console.log('draw');
-    console.log(draw_pile);
+    // console.log('cards');
+    // console.log(cards);
+    // console.log('\n\n\n\n');
+    // console.log('draw');
+    // console.log(draw_pile);
 
     for(let i = 0; i < 6; i++) {
         player1.cards[i] = draw_pile.shift();
         player2.cards[i] = draw_pile.shift();
     }
 
-    console.log('\n\n\n\n');
-    console.log('player 1 cards');
-    console.log(player1.cards);
-    console.log('\n\n\n\n');
-    console.log('player 2 cards');
-    console.log(player2.cards);
+    // console.log('\n\n\n\n');
+    // console.log('player 1 cards');
+    // console.log(player1.cards);
+    // console.log('\n\n\n\n');
+    // console.log('player 2 cards');
+    // console.log(player2.cards);
 }
 
+// Used for scoring
+// Convert the card letters to number values I can use (if you're wondering why I didn't just
+//      use numbers to start with, it's because Jack, Queen, and 10 all have the same value)
 function getCardValuesList(card_list) {
     card_scores = [];
     card_list.forEach(card => {
@@ -419,31 +439,16 @@ function getCardValuesList(card_list) {
     return card_scores;
 }
 
+// Calculate the score for this round and add it to each player's total score
 function setScores() {
-    // player1_card_scores = [];
-    // player2_card_scores = [];
-
-    // player1.cards.forEach(function (item, index) {
-    //     player1_card_scores[index] = getScore(item);
-    // });
-    // console.log(player1_card_scores);
-    console.log(player1.cards);
-    console.log('\n\n\n\n');
-
-    // player2.cards.forEach(function (item, index) {
-    //     player2_card_scores[index] = getScore(item);
-    // });
-    // console.log(player2_card_scores);
-    console.log(player2.cards);
-    console.log('\n\n\n\n');
-
-
     player1.score += calculateScore(getCardValuesList(player1.cards));
     player2.score += calculateScore(getCardValuesList(player2.cards));
-    console.log(player1.score);
-    console.log(player2.score);
+    // console.log(player1.score);
+    // console.log(player2.score);
 }
 
+// Actually do the score calculations
+// This figures out each column, determines if blocks exist, etc
 function calculateScore(card_scores) {
     blockPosition = 1;
     player_total_score = 0;
@@ -454,7 +459,7 @@ function calculateScore(card_scores) {
         [card_scores[2], card_scores[5]]
     ];
 
-    // Check for blocks
+    // Check for blocks (2x2 of the same card)
     if (columns[0][0] === columns[0][1] && columns[1][0] === columns[1][1] && 
         columns[0][0] === columns[1][0] && columns[0][1] === columns[1][1]) {
         blockPosition = 2;
@@ -465,7 +470,7 @@ function calculateScore(card_scores) {
         player_total_score -= 25;
     }
 
-    // If there is a block (2x2 of the same card), then check the last remaining column
+    // If there is a block, then score just the last remaining column
     if (blockPosition != 1) {
         if (columns[blockPosition][0] === -25 && columns[blockPosition][1] === -25) {
             player_total_score -= 50;
@@ -485,7 +490,7 @@ function calculateScore(card_scores) {
             player_total_score += (columns[blockPosition][0] + columns[blockPosition][1]);
         }
     } 
-    // Otherwise, since there are no blocks, calculate each column collectively
+    // Otherwise, since there are no blocks, calculate each column individually and add them together
     else {
         columns.forEach(item => {
             if (item.includes(-25)) {
@@ -522,4 +527,4 @@ function calculateScore(card_scores) {
 
 
 // Mason Stooksbury (2020)
-// <><
+// <>< #!

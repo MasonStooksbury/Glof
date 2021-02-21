@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "flog": {
+    "glof": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -17,12 +17,12 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/flog",
+            "outputPath": "dist/glof",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",
             "tsConfig": "tsconfig.app.json",
-            "aot": false,
+            "aot": true,
             "assets": [
               "src/favicon.ico",
               "src/assets"
@@ -48,9 +48,7 @@
               "optimization": true,
               "outputHashing": "all",
               "sourceMap": false,
-              "extractCss": true,
               "namedChunks": false,
-              "aot": true,
               "extractLicenses": true,
               "vendorChunk": false,
               "buildOptimizer": true,
@@ -72,18 +70,18 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "flog:build"
+            "browserTarget": "glof:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "flog:build:production"
+              "browserTarget": "glof:build:production"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "flog:build"
+            "browserTarget": "glof:build"
           }
         },
         "test": {
@@ -125,15 +123,15 @@
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
             "protractorConfig": "e2e/protractor.conf.js",
-            "devServerTarget": "flog:serve"
+            "devServerTarget": "glof:serve"
           },
           "configurations": {
             "production": {
-              "devServerTarget": "flog:serve:production"
+              "devServerTarget": "glof:serve:production"
             }
           }
         }
       }
     }},
-  "defaultProject": "flog"
+  "defaultProject": "glof"
 }

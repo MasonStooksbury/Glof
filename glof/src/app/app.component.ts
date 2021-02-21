@@ -1,7 +1,6 @@
 import { Component, OnInit, AfterViewInit } from '@angular/core';
 import io from 'socket.io-client';
 import "primeflex/primeflex.css";
-import { GameService } from './services/game/game.service';
 
 @Component({
 	selector: 'app-root',
@@ -61,6 +60,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 	];
 
 	cardBackImage = 'assets/Backs/GlofTheGame.png';
+	lastTurnImage = 'assets/lastturn.png';
 
 	constructor() { }
 
@@ -81,7 +81,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 		this.socket.on('startGame', data => {
 			this.initializeAllCards(this.cardBackImage);
 			this.startGame = true;
-			console.log(`discard card from start game: ${data}`);
+			// console.log(`discard card from start game: ${data}`);
 			this.topDiscardCard = data;
 			this.changeCardImage('discard', `assets/Fronts/${data}.png`);
 			// Once the game has started, allow the players to pick two cards
@@ -97,7 +97,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 		})
 		this.socket.on('receiveOtherCards', data => {
 			// Set their display deck to what I got from the server
-			console.log(`OTHER: ${data}`);
+			// console.log(`OTHER: ${data}`);
 			this.their_cards = [...data];
 			this.their_cards.forEach((item, index) => {
 				if (item !== ''){
@@ -107,7 +107,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 		})
 		this.socket.on('updateCards', data => {
 			this.my_cards = [...data];
-			console.log(`MINE: ${this.my_cards}`);
+			// console.log(`MINE: ${this.my_cards}`);
 			this.my_cards.forEach((item, index) => {
 				if (item !== ''){
 					this.changeCardImage('my', `assets/Fronts/${item}.png`, index);
@@ -115,7 +115,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 			});
 		})
 		this.socket.on('receiveDrawCard', data => {
-			console.log(`draw card: ${data}`);
+			// console.log(`draw card: ${data}`);
 			this.topDrawCard = data;
 			this.changeCardImage('draw', `assets/Fronts/${data}.png`);
 		})
@@ -123,7 +123,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 		// This happens on replace and discard so it is a good place to reset
 		//		the draw booleans
 		this.socket.on('receiveDiscardCard', data => {
-			console.log(`discard card: ${data}`);
+			// console.log(`discard card: ${data}`);
 			this.topDiscardCard = data;
 			this.changeCardImage('discard', `assets/Fronts/${data}.png`);
 			this.cardDrawnFromDiscardPile = false;
@@ -142,22 +142,16 @@ export class AppComponent implements OnInit, AfterViewInit {
 			this.myTurn = 'is-turn';
 			this.theirTurn = '';
 		})
-		//a;lsfjkd
 		this.socket.on('notifyLastTurn', data => {
-			console.log('FINAL TURN');
+			// console.log('FINAL TURN');
 			// Use turn dialog
 			this.headerMessage = data;
 			this.showTurnDialog = true;
 			this.myTurn = 'is-turn';
 			this.theirTurn = '';
-			// Change message
-			// Change meme
-		})
-		this.socket.on('receiveScore', data => {
-			console.log(`score: ${data}`);
 		})
 		this.socket.on('announceWinner', data => {
-			console.log('announce winner');
+			// console.log('announce winner');
 			this.gameOver = true;
 			this.headerMessage = data.message;
 			this.player1Score = data.p1Score;
@@ -168,14 +162,14 @@ export class AppComponent implements OnInit, AfterViewInit {
 			this.revealAllCards(data.yours, data.theirs);
 		})
 		this.socket.on('roundSummary', data => {
-			console.log('round summary');
+			// console.log('round summary');
 			this.headerMessage = data.message;
 			this.player1Score = data.p1Score;
 			this.player2Score = data.p2Score;
 			this.showDialog = true;
 		})
 		this.socket.on('nextRoundStart', data => {
-			console.log('next round');
+			// console.log('next round');
 			this.showDialog = false;
 			this.chooseTwoPhase = true;
 			this.turnsPhase = false;
@@ -184,13 +178,13 @@ export class AppComponent implements OnInit, AfterViewInit {
 			this.changeCardImage('discard', `assets/Fronts/${this.topDiscardCard}.png`);
 
 			this.topDrawCard = '';
-			console.log(`draw card: ${this.cardDrawnFromDrawPile}`);
-			console.log(`topdraw card: ${this.topDrawCard}`);
-			console.log(`show dialog card: ${this.showDialog}`);
-			console.log(`choose2 card: ${this.chooseTwoPhase}`);
+			// console.log(`draw card: ${this.cardDrawnFromDrawPile}`);
+			// console.log(`topdraw card: ${this.topDrawCard}`);
+			// console.log(`show dialog card: ${this.showDialog}`);
+			// console.log(`choose2 card: ${this.chooseTwoPhase}`);
 		})
 		this.socket.on('nextGameStart', data => {
-			console.log('next game!');
+			// console.log('next game!');
 			this.initializeAllCards(this.cardBackImage);
 			this.changeCardImage('discard', `assets/Fronts/${this.topDiscardCard}.png`);
 			this.showDialog = false;
@@ -254,7 +248,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 	public drawCardFromDiscardPile() {
 		if (this.turnsPhase && !this.cardDrawnFromDiscardPile && !this.cardDrawnFromDrawPile) {
 			this.cardDrawnFromDiscardPile = true;
-			console.log(`you picked up the ${this.topDiscardCard} from discard`);
+			// console.log(`you picked up the ${this.topDiscardCard} from discard`);
 			this.isDiscardSelected = 'selected';
 		}
 	}
@@ -270,8 +264,8 @@ export class AppComponent implements OnInit, AfterViewInit {
 	}
 
 	public replaceCard(cardIndex: number) {
-		console.log('replace attempt');
-		console.log(cardIndex);
+		// console.log('replace attempt');
+		// console.log(cardIndex);
 		if (this.turnsPhase && this.cardDrawnFromDrawPile ||
 			this.turnsPhase && this.cardDrawnFromDiscardPile) {
 			this.socket.emit('playerTurn', {action: 'replace', data: cardIndex, fromDiscardOrNah: this.cardDrawnFromDiscardPile})
@@ -282,14 +276,14 @@ export class AppComponent implements OnInit, AfterViewInit {
 	}
 
 	public reset(action: string) {
-		console.log('reset');
+		// console.log('reset');
 		this.socket.emit(action);
 	}
 
 	public changeCardImage(card: string, image: string, index?: number) {
 		let string_thing = `${card}_card`;
 		string_thing += index || index === 0 ? `_${index}` : '';
-		console.log(this.cardBackImage);
+		// console.log(this.cardBackImage);
 		const card_to_change = document.getElementById(string_thing) as HTMLImageElement;
 		card_to_change.src = image;
 	}
