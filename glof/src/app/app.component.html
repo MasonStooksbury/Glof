@@ -126,6 +126,7 @@
 
 <!-- Turn dialog -->
 <p-dialog header='{{headerMessage}}' (onHide)='showTurnDialog = false' [(visible)]='showTurnDialog' [modal]='true' [blockScroll]='true'>
-	<!-- Insert meme here -->
-	<!-- <p-button></p-button> -->
+	<div class='row justify-content-center'>
+		<img src='{{lastTurnImage}}' width='50%' height='50%'>
+	</div>
 </p-dialog>
