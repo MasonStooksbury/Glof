@@ -66,14 +66,15 @@ export class AppComponent implements OnInit, AfterViewInit {
 
 	public ngOnInit() {
 		// this.socket = io('http://localhost:709');
-		this.socket = io('http://192.168.1.9:709');
+		this.socket = io('http://192.168.1.64:709');
 		this.randomRoomId = Math.floor(Math.random()*(99999-10000+1)+10000);
 	}
 
 	public ngAfterViewInit() {
-		this.socket.on('connection', data => {
-			this.lobby = false;
+		this.socket.on('clientConnection', data => {
+			console.log('made it in here');
 			this.mainMenu = true;
+			this.lobby = false;
 			this.message = data.message;
 			this.player_id = data.player_id;
 			this.changeCardImage('preview', this.cardBackImage);
@@ -209,13 +210,9 @@ export class AppComponent implements OnInit, AfterViewInit {
 	}
 
 	public joinRoom(roomId) {
-		// if () {
-
-		// } else {
-
-		// }
 		console.log('hello');
 		console.log(roomId);
+		console.log(typeof(roomId));
 		console.log('bai');
 		this.socket.emit('joinRoom', {room: roomId});
 	}

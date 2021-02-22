@@ -37,32 +37,38 @@ var player1Start = true;
 socketReference = {};
 
 io.on('connection', (socket) => {
-    socketReference = socket;
-
     // TODO: Yeet this
-    socket.on('getInfo', function() {
-        console.log(socket.id);
-        console.log(players);
-        console.log(player_array);
-        console.log(io.sockets.adapter.rooms);
-    });
+    // socket.on('getInfo', function() {
+    //     console.log(socket.id);
+    //     console.log(players);
+    //     console.log(player_array);
+    //     console.log(io.sockets.adapter.rooms);
+    // });
+    console.log(`here we goooooooooooooo: ${socket.id}`);
 
-    socket.on('joinRoom', data => {
-        socketReference = socket;
-
+    socket.on('joinRoom', (data) => {
         var room = data.room;
+        console.log('in server');
+        console.log(room);
+        console.log(typeof(room));
 
         if (typeof(room) === 'string') {
+            console.log('in here for some reason?');
             room = parseInt(room)
         }
 
         socket.join(room);
 
-        setUpRoom(room);
+        console.log(`what is this?: ${typeof(io.sockets.adapter.rooms[room].player1)}`);
+        // Only the first player needs to setup the room
+        if (io.sockets.adapter.rooms[room].player1 == undefined) {
+            setUpRoom(room);
+        }
+
+        io.sockets.adapter.rooms[data.room].socketReference = socket;
 
         console.log('heller');
         console.log(socket.id);
-        console.log(io.sockets.adapter.rooms[room]);
         console.log(io.sockets.adapter.rooms[room].player1.socketId === '');
         console.log(room);
 
@@ -71,19 +77,24 @@ io.on('connection', (socket) => {
         if (io.sockets.adapter.rooms[room].player1.socketId === '') {
             io.sockets.adapter.rooms[room].player1.socketId = socket.id;
             io.sockets.adapter.rooms[room].player1.room = room;
-            io.sockets.adapter.rooms[room].player_array.push(player1);
+            io.sockets.adapter.rooms[room].player_array.push(io.sockets.adapter.rooms[room].player1);
             console.log(`player 1 id: ${socket.id}`);
-            toSender('connection', {message: 'Welcome to Glof! You are Player 1', player_id: '1'});
+            // TODO: Delete this
+            // toSender('connection', {message: 'Welcome to Glof! You are Player 1', player_id: '1'});
+            toSpecificSocket({id: socket.id, method: 'clientConnection', message: {message: 'Welcome to Glof! You are Player 1', player_id: '1'}});
+            console.log('did we make it this far?');
         } else {
             io.sockets.adapter.rooms[room].player2.socketId = socket.id;
             io.sockets.adapter.rooms[room].player2.room = room;
-            io.sockets.adapter.rooms[room].player_array.push(player2);
+            io.sockets.adapter.rooms[room].player_array.push(io.sockets.adapter.rooms[room].player2);
             console.log(`player 2 id: ${socket.id}`);
-            toSender('connection', {message: 'Welcome to Glof! You are Player 2', player_id: '2'})
+            // TODO: Delete this
+            // toSender('connection', {message: 'Welcome to Glof! You are Player 2', player_id: '2'})
+            toSpecificSocket({id: socket.id, method: 'clientConnection', message: {message: 'Welcome to Glof! You are Player 2', player_id: '2'}});
         }
         io.sockets.adapter.rooms[room].players++;
 
-        console.log('heller');
+        console.log('heller2');
         console.log(io.sockets.adapter.rooms[room]);
         console.log(io.sockets.adapter.rooms[room].player1.socketId === '');
         console.log(room);
@@ -94,7 +105,7 @@ io.on('connection', (socket) => {
 
     // This triggers whenever a player hits the ready up button.
     socket.on('playerReadyUp', function() {
-        socketReference = socket;
+        io.sockets.adapter.rooms[data.room].socketReference = socket;
         player_array.find(player => player.socketId === socket.id).isReady = true;
 
         // When both players are ready, start the main game and send the discard card
@@ -110,7 +121,7 @@ io.on('connection', (socket) => {
     // This is the beginning of the game where each player chooses two cards they want
     //      to reveal
     socket.on('chooseCard', index => {
-        socketReference = socket;
+        io.sockets.adapter.rooms[data.room].socketReference = socket;
         current_player = player_array.find(player => player.socketId === socket.id);
 
         if (current_player.chosenCards < 2) {
@@ -119,9 +130,11 @@ io.on('connection', (socket) => {
 
             // Fill their display deck with the card they chose
             current_player.display_cards[index] = current_player.cards[index];
-
+            
+            // TODO: Delete this
+            // toSender('receiveCard', {card: current_player.display_cards[index], index: index});
             // Send them their choice so they can see it
-            toSender('receiveCard', {card: current_player.display_cards[index], index: index});
+            toSpecificSocket({id: current_player.socketId, method: 'receiveCard', message: {card: current_player.display_cards[index], index: index}});
         }
 
         // Once both players have chosen their cards, send each player the opposing player's display deck
@@ -144,7 +157,7 @@ io.on('connection', (socket) => {
 
     // This is where the logic for turn-taking happens
     socket.on('playerTurn', data => {
-        socketReference = socket;
+        io.sockets.adapter.rooms[data.room].socketReference = socket;
         // Only allow players to do things on their turn
         if (turn && socket.id === player1.socketId || !turn && socket.id === player2.socketId) {
             current_player = player_array.find(player => player.socketId === socket.id);
@@ -153,7 +166,9 @@ io.on('connection', (socket) => {
                 // console.log('card drawn');
                 // Take a card off the top of the draw pile and send it to the player
                 top_of_draw_pile = draw_pile.shift()
-                toSender('receiveDrawCard', top_of_draw_pile);
+                // TODO: Delete this
+                // toSender('receiveDrawCard', top_of_draw_pile);
+                toSpecificSocket({id: current_player.socketId, method: 'receiveDrawCard', message: top_of_draw_pile});
                 // Update the number of cards in the draw pile so everyone can see it
                 toEveryone('updateDrawPileCount', draw_pile.length);
             }
@@ -199,7 +214,7 @@ io.on('connection', (socket) => {
 
     // Trigger the next round
     socket.on('nextRound', function() {
-        socketReference = socket;
+        io.sockets.adapter.rooms[data.room].socketReference = socket;
         // Only player 1 is allowed to do this
         if (socket.id === player1.socketId) {
             reset();
@@ -209,7 +224,7 @@ io.on('connection', (socket) => {
 
     // Trigger a new game
     socket.on('newGame', function() {
-        socketReference = socket;
+        io.sockets.adapter.rooms[data.room].socketReference = socket;
         // Only player 1 is allowed to do this
         if (socket.id === player1.socketId) {
             reset('score');
@@ -219,7 +234,7 @@ io.on('connection', (socket) => {
 
     // If people leave, let's clean up the game and get it ready for when they want to play again
     socket.on('disconnect', function() {
-        socketReference = socket;
+        io.sockets.adapter.rooms[data.room].socketReference = socket;
         // Decrement the number of players as they leave
         --players;
         // If there are no more players, reset everything for when they join next time
@@ -337,9 +352,11 @@ function endGame() {
 // I realize they are simple commands, but I found myself not being able to quickly
 //      tell what was going on with these emissions. So I wrote obvious wrappers for
 //      all of the ones I use
-function toSender(method, data) {
-    socketReference.emit(method, data)
-}
+
+// TODO: Delete this
+// function toSender(data) {
+//     socketReference.emit(method, data);
+// }
 
 function toEveryone(room, method, data) {
     // io.emit(method, data);
@@ -348,6 +365,7 @@ function toEveryone(room, method, data) {
 
 function toSpecificSocket(data) {
     io.to(data.id).emit(data.method, data.message);
+    console.log('after specific socket');
 }
 
 // I don't use this, but I'm gonna leave it in here for later just so I have it
@@ -526,5 +544,5 @@ function calculateScore(card_scores) {
 }
 
 
-// Mason Stooksbury (2020)
+// Mason Stooksbury (2020) - rooms added in 2021
 // <>< #!
