@@ -57,9 +57,9 @@ io.on('connection', (socket) => {
             room = parseInt(room)
         }
 
+        // TODO: Setup logic to only allow 2 people in a room
         socket.join(room);
 
-        console.log(`what is this?: ${typeof(io.sockets.adapter.rooms[room].player1)}`);
         // Only the first player needs to setup the room
         if (io.sockets.adapter.rooms[room].player1 == undefined) {
             setUpRoom(room);
@@ -82,12 +82,13 @@ io.on('connection', (socket) => {
             // TODO: Delete this
             // toSender('connection', {message: 'Welcome to Glof! You are Player 1', player_id: '1'});
             toSpecificSocket({id: socket.id, method: 'clientConnection', message: {message: 'Welcome to Glof! You are Player 1', player_id: '1'}});
-            console.log('did we make it this far?');
         } else {
             io.sockets.adapter.rooms[room].player2.socketId = socket.id;
             io.sockets.adapter.rooms[room].player2.room = room;
             io.sockets.adapter.rooms[room].player_array.push(io.sockets.adapter.rooms[room].player2);
             console.log(`player 2 id: ${socket.id}`);
+            console.log(`io: ${io}`);
+            // console.log(`socket thing ${io.rooms[socket.id]}`);
             // TODO: Delete this
             // toSender('connection', {message: 'Welcome to Glof! You are Player 2', player_id: '2'})
             toSpecificSocket({id: socket.id, method: 'clientConnection', message: {message: 'Welcome to Glof! You are Player 2', player_id: '2'}});
@@ -96,27 +97,28 @@ io.on('connection', (socket) => {
 
         console.log('heller2');
         console.log(io.sockets.adapter.rooms[room]);
+        console.log(io.sockets.adapter.rooms); // { '29834': Room....
         console.log(io.sockets.adapter.rooms[room].player1.socketId === '');
         console.log(room);
-
-        // STOP HERE. FIX ABOVE
     })
 
-
+    // TODO: START HERE
     // This triggers whenever a player hits the ready up button.
-    socket.on('playerReadyUp', function() {
+    socket.on('playerReadyUp', (data) => {
         io.sockets.adapter.rooms[data.room].socketReference = socket;
-        player_array.find(player => player.socketId === socket.id).isReady = true;
+        room = io.sockets.adapter.rooms[data.room]
+        room.player_array.find(player => player.socketId === socket.id).isReady = true;
 
         // When both players are ready, start the main game and send the discard card
-        if (player1.isReady && player2.isReady) {
-            shuffleDeckAndAssign();
+        if (room.player1.isReady && room.player2.isReady) {
+            shuffleDeckAndAssign(room);
             // Assign players their cards
-            discard_pile = draw_pile.shift();
-            toEveryone('updateDrawPileCount', draw_pile.length)
-            toEveryone('startGame', discard_pile);
+            room.discard_pile = room.draw_pile.shift();
+            toEveryone(room, 'updateDrawPileCount', room.draw_pile.length)
+            toEveryone(room, 'startGame', room.discard_pile);
         }
     })
+    // TODO: MAKE SURE THE ABOVE WORKS
 
     // This is the beginning of the game where each player chooses two cards they want
     //      to reveal
@@ -365,7 +367,6 @@ function toEveryone(room, method, data) {
 
 function toSpecificSocket(data) {
     io.to(data.id).emit(data.method, data.message);
-    console.log('after specific socket');
 }
 
 // I don't use this, but I'm gonna leave it in here for later just so I have it
@@ -406,13 +407,13 @@ function setUpRoom(roomId) {
     }
 
 // Shuffle the deck and give everyone their 6 cards from the top of the draw_pile
-function shuffleDeckAndAssign() {
-    draw_pile = [...cards];
-    for(let i = draw_pile.length - 1; i > 0; i--) {
+function shuffleDeckAndAssign(room) {
+    room.draw_pile = [...room.cards];
+    for(let i = room.draw_pile.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * i)
-        const temp = draw_pile[i]
-        draw_pile[i] = draw_pile[j]
-        draw_pile[j] = temp
+        const temp = room.draw_pile[i]
+        room.draw_pile[i] = room.draw_pile[j]
+        room.draw_pile[j] = temp
     }
 
     // console.log('cards');

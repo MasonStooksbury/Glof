@@ -50,7 +50,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 	isDrawSelected = '';
 	isDiscardSelected = '';
 
-	randomRoomId = 0;
+	roomId = 0;
 
 	cardBackImages = [
 		{label: 'StainedGlass', value: 'assets/Backs/StainedGlass.png'},
@@ -67,7 +67,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 	public ngOnInit() {
 		// this.socket = io('http://localhost:709');
 		this.socket = io('http://192.168.1.64:709');
-		this.randomRoomId = Math.floor(Math.random()*(99999-10000+1)+10000);
+		this.roomId = Math.floor(Math.random()*(99999-10000+1)+10000);
 	}
 
 	public ngAfterViewInit() {
@@ -210,19 +210,16 @@ export class AppComponent implements OnInit, AfterViewInit {
 	}
 
 	public joinRoom(roomId) {
-		console.log('hello');
-		console.log(roomId);
-		console.log(typeof(roomId));
-		console.log('bai');
+		this.roomId = roomId
 		this.socket.emit('joinRoom', {room: roomId});
 	}
 
 	public openMainMenu() {
-		this.socket.emit('joinRoom', {room: this.randomRoomId});
+		this.socket.emit('joinRoom', {room: this.roomId});
 	}
 
 	public readyUp() {
-		this.socket.emit('playerReadyUp');
+		this.socket.emit('playerReadyUp', {room: this.roomId});
 		this.mainMenu = false;
 		this.readyButtonText = 'Waiting...';
 	}
