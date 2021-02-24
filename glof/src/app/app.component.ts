@@ -72,7 +72,6 @@ export class AppComponent implements OnInit, AfterViewInit {
 
 	public ngAfterViewInit() {
 		this.socket.on('clientConnection', data => {
-			console.log('made it in here');
 			this.mainMenu = true;
 			this.lobby = false;
 			this.message = data.message;
@@ -81,6 +80,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 		})
 		this.socket.on('startGame', data => {
 			this.initializeAllCards(this.cardBackImage);
+			this.mainMenu = false;
 			this.startGame = true;
 			// console.log(`discard card from start game: ${data}`);
 			this.topDiscardCard = data;
@@ -220,14 +220,13 @@ export class AppComponent implements OnInit, AfterViewInit {
 
 	public readyUp() {
 		this.socket.emit('playerReadyUp', {room: this.roomId});
-		this.mainMenu = false;
 		this.readyButtonText = 'Waiting...';
 	}
 
 	// This is only used during the Card-Choosing phase
 	public chooseCard(cardIndex: number) {
 		if (this.chooseTwoPhase && this.my_cards[cardIndex] === '') {
-			this.socket.emit('chooseCard', cardIndex);
+			this.socket.emit('chooseCard', {room: this.roomId, index: cardIndex});
 		}
 	}
 
@@ -277,7 +276,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 	public changeCardImage(card: string, image: string, index?: number) {
 		let string_thing = `${card}_card`;
 		string_thing += index || index === 0 ? `_${index}` : '';
-		// console.log(this.cardBackImage);
+		// console.log(string_thing);
 		const card_to_change = document.getElementById(string_thing) as HTMLImageElement;
 		card_to_change.src = image;
 	}

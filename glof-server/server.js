@@ -102,11 +102,10 @@ io.on('connection', (socket) => {
         console.log(room);
     })
 
-    // TODO: START HERE
     // This triggers whenever a player hits the ready up button.
     socket.on('playerReadyUp', (data) => {
-        io.sockets.adapter.rooms[data.room].socketReference = socket;
         room = io.sockets.adapter.rooms[data.room]
+        room.socketReference = socket;
         room.player_array.find(player => player.socketId === socket.id).isReady = true;
 
         // When both players are ready, start the main game and send the discard card
@@ -114,15 +113,15 @@ io.on('connection', (socket) => {
             shuffleDeckAndAssign(room);
             // Assign players their cards
             room.discard_pile = room.draw_pile.shift();
-            toEveryone(room, 'updateDrawPileCount', room.draw_pile.length)
-            toEveryone(room, 'startGame', room.discard_pile);
+            toEveryoneInRoom(data.room, 'updateDrawPileCount', room.draw_pile.length)
+            toEveryoneInRoom(data.room, 'startGame', room.discard_pile);
         }
     })
-    // TODO: MAKE SURE THE ABOVE WORKS
 
+    // TODO: START HERE
     // This is the beginning of the game where each player chooses two cards they want
     //      to reveal
-    socket.on('chooseCard', index => {
+    socket.on('chooseCard', data => {
         io.sockets.adapter.rooms[data.room].socketReference = socket;
         current_player = player_array.find(player => player.socketId === socket.id);
 
@@ -131,12 +130,12 @@ io.on('connection', (socket) => {
             current_player.chosenCards++;
 
             // Fill their display deck with the card they chose
-            current_player.display_cards[index] = current_player.cards[index];
+            current_player.display_cards[data.index] = current_player.cards[data.index];
             
             // TODO: Delete this
             // toSender('receiveCard', {card: current_player.display_cards[index], index: index});
             // Send them their choice so they can see it
-            toSpecificSocket({id: current_player.socketId, method: 'receiveCard', message: {card: current_player.display_cards[index], index: index}});
+            toSpecificSocket({id: current_player.socketId, method: 'receiveCard', message: {card: current_player.display_cards[data.index], index: data.index}});
         }
 
         // Once both players have chosen their cards, send each player the opposing player's display deck
@@ -148,7 +147,7 @@ io.on('connection', (socket) => {
             toSpecificSocket({id: player2.socketId, method: 'receiveOtherCards', message: player1.display_cards});
 
             // End the choose-2 phase and begin the main game
-            toEveryone('startTurns', true);
+            toEveryoneInRoom('startTurns', true);
             if (turn) {
                 toSpecificSocket({id: player1.socketId, method: 'notifyTurn', message: 'Your turn!'});
             } else {
@@ -156,6 +155,7 @@ io.on('connection', (socket) => {
             }
         }
     })
+    // TODO: MAKE SURE THE ABOVE WORKS
 
     // This is where the logic for turn-taking happens
     socket.on('playerTurn', data => {
@@ -172,7 +172,7 @@ io.on('connection', (socket) => {
                 // toSender('receiveDrawCard', top_of_draw_pile);
                 toSpecificSocket({id: current_player.socketId, method: 'receiveDrawCard', message: top_of_draw_pile});
                 // Update the number of cards in the draw pile so everyone can see it
-                toEveryone('updateDrawPileCount', draw_pile.length);
+                toEveryoneInRoom('updateDrawPileCount', draw_pile.length);
             }
             // Or if their action was to replace a card in their grid
             else if (data.action === 'replace') {
@@ -195,7 +195,7 @@ io.on('connection', (socket) => {
                 // Send everyone their deck and their opponent's deck
                 updateAllCards();
                 // Update the discard card
-                toEveryone('receiveDiscardCard', discard_pile);
+                toEveryoneInRoom('receiveDiscardCard', discard_pile);
 
                 // Change turns
                 changeTurn(current_player);
@@ -207,7 +207,7 @@ io.on('connection', (socket) => {
             else if (data.action === 'discard') {
                 // console.log('card discarded');
                 discard_pile = top_of_draw_pile;
-                toEveryone('receiveDiscardCard', discard_pile);
+                toEveryoneInRoom('receiveDiscardCard', discard_pile);
 
                 changeTurn(current_player);
             }
@@ -220,7 +220,7 @@ io.on('connection', (socket) => {
         // Only player 1 is allowed to do this
         if (socket.id === player1.socketId) {
             reset();
-            toEveryone('nextRoundStart');
+            toEveryoneInRoom('nextRoundStart');
         }
     })
 
@@ -230,7 +230,7 @@ io.on('connection', (socket) => {
         // Only player 1 is allowed to do this
         if (socket.id === player1.socketId) {
             reset('score');
-            toEveryone('nextGameStart');
+            toEveryoneInRoom('nextGameStart');
         }
     })
 
@@ -326,8 +326,8 @@ function reset(resetPlayers) {
         shuffleDeckAndAssign();
         updateAllCards();
         discard_pile = draw_pile.shift();
-        toEveryone('receiveDiscardCard', discard_pile);
-        toEveryone('updateDrawPileCount', draw_pile.length);
+        toEveryoneInRoom('receiveDiscardCard', discard_pile);
+        toEveryoneInRoom('updateDrawPileCount', draw_pile.length);
     }
 }
 
@@ -339,11 +339,11 @@ function endGame() {
     toSpecificSocket({id: player2.socketId, method: 'revealCards', message: {yours: player2.cards, theirs: player1.cards}});
 
     if ((player1.score < player2.score && player1.score <= -100) || (player1.score < player2.score && player2.score >= 100)) {
-        toEveryone('announceWinner', {message: 'Player 1 Wins!', p1Score: player1.score, p2Score: player2.score})
+        toEveryoneInRoom('announceWinner', {message: 'Player 1 Wins!', p1Score: player1.score, p2Score: player2.score})
     } else if ((player2.score < player1.score && player2.score <= -100) || (player2.score < player1.score && player1.score >= 100)) {
-        toEveryone('announceWinner', {message: 'Player 2 Wins!', p1Score: player1.score, p2Score: player2.score})
+        toEveryoneInRoom('announceWinner', {message: 'Player 2 Wins!', p1Score: player1.score, p2Score: player2.score})
     } else {
-        toEveryone('roundSummary', {message: 'Round Summary', p1Score: player1.score, p2Score: player2.score});
+        toEveryoneInRoom('roundSummary', {message: 'Round Summary', p1Score: player1.score, p2Score: player2.score});
     }
 }
 
@@ -360,9 +360,10 @@ function endGame() {
 //     socketReference.emit(method, data);
 // }
 
-function toEveryone(room, method, data) {
+function toEveryoneInRoom(room, method, data) {
     // io.emit(method, data);
-    io.sockets.in(room).emit(method, data);
+    console.log(room);
+    io.in(room).emit(method, data);
 }
 
 function toSpecificSocket(data) {
@@ -375,35 +376,37 @@ function toSpecificSocket(data) {
 // }
 
 
-
+// TODO: Change the roomId here to be the io.socket... version
+//      make the calling function pass it so we don't have to figure it out
 function setUpRoom(roomId) {
+    room = io.sockets.adapter.rooms[roomId];
     // The available deck of cards plus both Jokers (Z1 and Z2)
-    io.sockets.adapter.rooms[roomId].cards = ['DA', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10', 'DJ', 'DQ', 'DK',
+    room.cards = ['DA', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10', 'DJ', 'DQ', 'DK',
     'SA', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'SJ', 'SQ', 'SK',
     'HA', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'H8', 'H9', 'H10', 'HJ', 'HQ', 'HK',
     'CA', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10', 'CJ', 'CQ', 'CK',
     'Z1', 'Z2'
     ];
 
-    io.sockets.adapter.rooms[roomId].draw_pile = [];
-    io.sockets.adapter.rooms[roomId].discard_pile = '';
-    io.sockets.adapter.rooms[roomId].top_of_draw_pile = '';
+    room.draw_pile = [];
+    room.discard_pile = '';
+    room.top_of_draw_pile = '';
 
-    io.sockets.adapter.rooms[roomId].player1 = {socketId: '', room: 0, score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
-    io.sockets.adapter.rooms[roomId].player2 = {socketId: '', room: 0, score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
-    io.sockets.adapter.rooms[roomId].players = 0;
-    io.sockets.adapter.rooms[roomId].player_array = [];
+    room.player1 = {socketId: '', room: 0, score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
+    room.player2 = {socketId: '', room: 0, score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
+    room.players = 0;
+    room.player_array = [];
 
     // To make this easy, this will be in reference to player1
     // i.e.  'true' if it is player 1's turn, 'false' if not
-    io.sockets.adapter.rooms[roomId].turn = true;
+    room.turn = true;
 
-    io.sockets.adapter.rooms[roomId].player1Start = true;
+    room.player1Start = true;
 
     // Probably an architectural nightmare, but basically this gets changed all the time
     //      to whatever the current socket is. That way, I don't have to pass it to
     //      my socket wrapper methods
-    io.sockets.adapter.rooms[roomId].socketReference = {};
+    room.socketReference = {};
     }
 
 // Shuffle the deck and give everyone their 6 cards from the top of the draw_pile
@@ -423,8 +426,8 @@ function shuffleDeckAndAssign(room) {
     // console.log(draw_pile);
 
     for(let i = 0; i < 6; i++) {
-        player1.cards[i] = draw_pile.shift();
-        player2.cards[i] = draw_pile.shift();
+        room.player1.cards[i] = room.draw_pile.shift();
+        room.player2.cards[i] = room.draw_pile.shift();
     }
 
     // console.log('\n\n\n\n');
