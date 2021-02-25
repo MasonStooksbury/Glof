@@ -205,10 +205,6 @@ export class AppComponent implements OnInit, AfterViewInit {
 	// ########################## Actions ################################
 	// ###################################################################
 
-	public getInfo() {
-		this.socket.emit('getInfo');
-	}
-
 	public joinRoom(roomId) {
 		this.roomId = roomId
 		this.socket.emit('joinRoom', {room: roomId});
@@ -232,7 +228,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 
 	public drawCardFromDrawPile() {
 		if (this.turnsPhase && !this.cardDrawnFromDrawPile && !this.cardDrawnFromDiscardPile) {
-			this.socket.emit('playerTurn', {action: 'drawFromDrawPile'});
+			this.socket.emit('playerTurn', {room: this.roomId, action: 'drawFromDrawPile'});
 			this.cardDrawnFromDrawPile = true;
 			this.isDrawSelected = 'selected';
 		}
@@ -248,7 +244,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 
 	public discardCard() {
 		if (this.turnsPhase && this.cardDrawnFromDrawPile) {
-			this.socket.emit('playerTurn', {action: 'discard', data: this.topDrawCard});
+			this.socket.emit('playerTurn', {room: this.roomId, action: 'discard'});
 			this.changeCardImage('draw', this.cardBackImage);
 			this.isDiscardSelected = 'selected';
 			this.myTurn = '';
@@ -261,7 +257,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 		// console.log(cardIndex);
 		if (this.turnsPhase && this.cardDrawnFromDrawPile ||
 			this.turnsPhase && this.cardDrawnFromDiscardPile) {
-			this.socket.emit('playerTurn', {action: 'replace', data: cardIndex, fromDiscardOrNah: this.cardDrawnFromDiscardPile})
+			this.socket.emit('playerTurn', {room: this.roomId, action: 'replace', data: cardIndex, fromDiscardOrNah: this.cardDrawnFromDiscardPile})
 			this.changeCardImage('draw', this.cardBackImage);
 			this.myTurn = '';
 			this.theirTurn = 'is-turn';
@@ -270,7 +266,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 
 	public reset(action: string) {
 		// console.log('reset');
-		this.socket.emit(action);
+		this.socket.emit(action, {room: this.roomId});
 	}
 
 	public changeCardImage(card: string, image: string, index?: number) {

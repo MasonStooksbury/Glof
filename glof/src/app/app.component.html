@@ -101,7 +101,7 @@
 			<div class='p-col-6 p-offset-3 p-lg-4 p-lg-offset-4 my-cards'>
 				<div class="p-grid p-justify-center">
 					<div class="p-col-3 p-lg-2">
-						<a (click)='chooseCard(0); replaceCard(0)'><img id='my_card_0' src='' width='100%' height='100%'></a>
+						<a (click)='chooseTwoPhase ? chooseCard(0) : replaceCard(0)'><img id='my_card_0' src='' width='100%' height='100%'></a>
 					</div>
 					<div class="p-col-3 p-lg-2 middle-card">
 						<a (click)='chooseCard(1); replaceCard(1)'><img id='my_card_1' src='' width='100%' height='100%'></a>
