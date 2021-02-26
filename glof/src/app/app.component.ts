@@ -76,7 +76,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 			this.lobby = false;
 			this.message = data.message;
 			this.player_id = data.player_id;
-			this.changeCardImage('preview', this.cardBackImage);
+			// this.changeCardImage('preview', this.cardBackImage);
 		})
 		this.socket.on('startGame', data => {
 			this.initializeAllCards(this.cardBackImage);
@@ -197,6 +197,38 @@ export class AppComponent implements OnInit, AfterViewInit {
 
 			this.topDrawCard = '';
 		})
+		// This only gets called if the other player disconnects
+		this.socket.on('kickToLobby', data => {
+			this.startGame = false;
+			this.mainMenu = false;
+			this.lobby = true;
+			this.readyButtonText = "I'm ready!";
+			this.message = '';
+			this.player_id = '';
+			this.headerMessage = '';
+			this.winningPlayer = '';
+			this.otherText = '';
+			this.showDialog = false;
+			this.showTurnDialog = false;
+			this.theirTurn = 'is-turn';
+			this.myTurn = '';
+			this.isSelected = '';
+			this.topDiscardCard = '';
+			this.topDrawCard = '';
+			this.drawPileCount = 0;
+			this.my_cards = ['', '', '', '', '', ''];
+			this.their_cards = ['', '', '', '', '', ''];
+			this.chooseTwoPhase = false;
+			this.turnsPhase = false;
+			this.cardDrawnFromDrawPile = false;
+			this.cardDrawnFromDiscardPile = false;
+			this.player1Score = 0;
+			this.player2Score = 0;
+			this.gameOver = false;
+			this.isDrawSelected = '';
+			this.isDiscardSelected = '';
+			this.roomId = Math.floor(Math.random()*(99999-10000+1)+10000);
+		})
 	}
 
 
@@ -219,10 +251,17 @@ export class AppComponent implements OnInit, AfterViewInit {
 		this.readyButtonText = 'Waiting...';
 	}
 
-	// This is only used during the Card-Choosing phase
 	public chooseCard(cardIndex: number) {
+		// This is used during the "choose two" phase
 		if (this.chooseTwoPhase && this.my_cards[cardIndex] === '') {
 			this.socket.emit('chooseCard', {room: this.roomId, index: cardIndex});
+		} 
+		// This is used the rest of the time
+		else if (this.turnsPhase && this.cardDrawnFromDrawPile || this.turnsPhase && this.cardDrawnFromDiscardPile) {
+			this.socket.emit('playerTurn', {room: this.roomId, action: 'replace', data: cardIndex, fromDiscardOrNah: this.cardDrawnFromDiscardPile});
+			this.changeCardImage('draw', this.cardBackImage);
+			this.myTurn = '';
+			this.theirTurn = 'is-turn';
 		}
 	}
 

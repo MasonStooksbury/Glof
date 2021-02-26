@@ -31,11 +31,13 @@ io.on('connection', (socket) => {
         // Assign players as they connect
         if (room.player1.socketId === '') {
             room.player1.socketId = socket.id;
+            room.player1.socket = socket;
             room.player_array.push(room.player1);
 
             toSpecificSocket({id: socket.id, method: 'clientConnection', message: {message: 'Welcome to Glof! You are Player 1', player_id: '1'}});
         } else {
             room.player2.socketId = socket.id;
+            room.player2.socket = socket;
             room.player_array.push(room.player2);
             
             toSpecificSocket({id: socket.id, method: 'clientConnection', message: {message: 'Welcome to Glof! You are Player 2', player_id: '2'}});
@@ -174,17 +176,22 @@ io.on('connection', (socket) => {
         }
     })
 
-    // If people leave, let's clean up the game and get it ready for when they want to play again
-    socket.on('disconnect', (data) => {
-        room = io.sockets.adapter.rooms[data.room];
-        room.socketReference = socket;
-        // Decrement the number of players as they leave
-        --room.players;
-        // If there are no more players, reset everything for when they join next time
-        if (room.players === 0) {
-            reset(room, data.room, 'scoreAndId');
-            room.players = 0;
-            room.player_array = [];
+    // If one player leaves a room, kick the other player out and send them back to the main menu
+    socket.on('disconnecting', function() {
+        // Capture the room ID so we can leave later
+        room_id = Object.keys(socket.rooms)[0];
+        // Grab the room from the io object
+        room = io.sockets.adapter.rooms[room_id];
+
+        // Kick remaining player back to the lobby so they can start a new game or quit
+        toEveryoneInRoom(room_id, 'kickToLobby');
+
+        // Kick everyone out of the room
+        if (room.player1.socket) {
+            room.player1.socket.leave(room_id);
+        }
+        if (room.player2.socket) {
+            room.player2.socket.leave(room_id);
         }
     });
 });
@@ -320,8 +327,8 @@ function setUpRoom(roomId) {
     room.discard_pile = '';
     room.top_of_draw_pile = '';
 
-    room.player1 = {socketId: '', room: 0, score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
-    room.player2 = {socketId: '', room: 0, score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
+    room.player1 = {socketId: '', socket: {}, room: 0, score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
+    room.player2 = {socketId: '', socket: {}, room: 0, score: 0, isReady: false, chosenCards: 0, isLastTurn: false, display_cards: ['', '', '', '', '', ''], cards: ['', '', '', '', '', '']};
     room.players = 0;
     room.player_array = [];
 
