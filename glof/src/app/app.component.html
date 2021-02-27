@@ -28,21 +28,8 @@
 			</div>
 		</div>
 		<div class='row justify-content-center buffered-top'>
-			<img id='preview_card' src='' width='10%' height='10%'>
+			<img id='preview_card' src='' sizes="(max-width: 500px) 80vw, (max-width: 900px) 50vw, 800px">
 		</div>
-		<!-- <div class='row justify-content-center'>
-			<div class="p-col-6 p-offset-3 p-lg-4 p-lg-offset-4 buffered-top">
-				<div class='p-grid p-justify-center'>
-					<div class='col-sm-3 clean'>
-						<span style='margin-bottom: 1em'>Choose card theme:</span>
-						<p-selectButton [options]='cardBackImages' [(ngModel)]='cardBackImage' (onChange)='changeCardImage("preview", $event.value)'></p-selectButton>
-					</div>
-					<div class='col-sm-3 buffered-top' style='margin-left: .25em'>
-						<img id='preview_card' src='' width='100%' height='100%'>
-					</div>
-				</div>
-			</div>
-		</div> -->
 
 		<div class='row justify-content-center buffered-top'>
 			<p-button class='buffered-top' (onClick)='readyUp()' label='{{readyButtonText}}'></p-button>
