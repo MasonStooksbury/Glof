@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, AfterViewChecked } from '@angular/core';
 import io from 'socket.io-client';
 import "primeflex/primeflex.css";
 
@@ -7,7 +7,7 @@ import "primeflex/primeflex.css";
 	templateUrl: './app.component.html',
 	styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit, AfterViewInit {	
+export class AppComponent implements OnInit, AfterViewInit, AfterViewChecked {	
 	context: any;
 	socket: any;
 
@@ -46,9 +46,6 @@ export class AppComponent implements OnInit, AfterViewInit {
 	player2Score = 0;
 
 	gameOver = false;
-
-	isDrawSelected = '';
-	isDiscardSelected = '';
 
 	roomId = 0;
 
@@ -129,8 +126,6 @@ export class AppComponent implements OnInit, AfterViewInit {
 			this.changeCardImage('discard', `assets/Fronts/${data}.png`);
 			this.cardDrawnFromDiscardPile = false;
 			this.cardDrawnFromDrawPile = false;
-			this.isDrawSelected = '';
-			this.isDiscardSelected = '';
 		})
 		this.socket.on('updateDrawPileCount', data => {
 			this.drawPileCount = data;
@@ -225,10 +220,13 @@ export class AppComponent implements OnInit, AfterViewInit {
 			this.player1Score = 0;
 			this.player2Score = 0;
 			this.gameOver = false;
-			this.isDrawSelected = '';
-			this.isDiscardSelected = '';
 			this.roomId = Math.floor(Math.random()*(99999-10000+1)+10000);
+			this.cardBackImage = 'assets/Backs/GlofTheGame.png';
 		})
+	}
+
+	public ngAfterViewChecked() {
+		this.changeCardImage('preview', this.cardBackImage);
 	}
 
 
@@ -238,12 +236,16 @@ export class AppComponent implements OnInit, AfterViewInit {
 	// ###################################################################
 
 	public joinRoom(roomId) {
-		this.roomId = roomId
-		this.socket.emit('joinRoom', {room: roomId});
+		if (roomId != '') {
+			this.roomId = roomId;
+			this.socket.emit('joinRoom', {room: roomId});
+		}
 	}
 
 	public openMainMenu() {
-		this.socket.emit('joinRoom', {room: this.roomId});
+		if (this.roomId != NaN) {
+			this.socket.emit('joinRoom', {room: this.roomId});
+		}
 	}
 
 	public readyUp() {
@@ -269,7 +271,6 @@ export class AppComponent implements OnInit, AfterViewInit {
 		if (this.turnsPhase && !this.cardDrawnFromDrawPile && !this.cardDrawnFromDiscardPile) {
 			this.socket.emit('playerTurn', {room: this.roomId, action: 'drawFromDrawPile'});
 			this.cardDrawnFromDrawPile = true;
-			this.isDrawSelected = 'selected';
 		}
 	}
 
@@ -277,7 +278,6 @@ export class AppComponent implements OnInit, AfterViewInit {
 		if (this.turnsPhase && !this.cardDrawnFromDiscardPile && !this.cardDrawnFromDrawPile) {
 			this.cardDrawnFromDiscardPile = true;
 			// console.log(`you picked up the ${this.topDiscardCard} from discard`);
-			this.isDiscardSelected = 'selected';
 		}
 	}
 
@@ -285,7 +285,6 @@ export class AppComponent implements OnInit, AfterViewInit {
 		if (this.turnsPhase && this.cardDrawnFromDrawPile) {
 			this.socket.emit('playerTurn', {room: this.roomId, action: 'discard'});
 			this.changeCardImage('draw', this.cardBackImage);
-			this.isDiscardSelected = 'selected';
 			this.myTurn = '';
 			this.theirTurn = 'is-turn';
 		}

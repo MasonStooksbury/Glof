@@ -17,7 +17,12 @@ io.on('connection', (socket) => {
             data.room = parseInt(data.room)
         }
 
-        // TODO: Setup logic to only allow 2 people in a data.room
+        // If the room already has two people in it, don't let anyone else join
+        if (room != undefined && room.length == 2) {
+            return;
+        }
+
+        // Actually join the room (and thus create it in Socket.IO)
         socket.join(data.room);
 
         // Only the first player needs to setup the data.room
@@ -25,6 +30,7 @@ io.on('connection', (socket) => {
             setUpRoom(data.room);
         }
 
+        // Save the socket reference 
         io.sockets.adapter.rooms[data.room].socketReference = socket;
         console.log(data.room);
 
@@ -185,13 +191,17 @@ io.on('connection', (socket) => {
 
         // Kick remaining player back to the lobby so they can start a new game or quit
         toEveryoneInRoom(room_id, 'kickToLobby');
-
+        console.log(room);
         // Kick everyone out of the room
-        if (room.player1.socket) {
+        try {
             room.player1.socket.leave(room_id);
+        } catch (e) {
+            console.log(':)');
         }
-        if (room.player2.socket) {
+        try {
             room.player2.socket.leave(room_id);
+        } catch (e) {
+            console.log(':)');
         }
     });
 });
