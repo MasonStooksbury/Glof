@@ -21,7 +21,16 @@
 			<span *ngIf="player_id == '1'">Be sure to tell your friend you are in room: <b>{{roomId}}</b></span>
 		</div>
 
-		<div class='row justify-content-center'>
+		<div class='row justify-content-center buffered-top'>
+			<div class='col-sm-3'>
+				<span style='margin-bottom: 1em'>Choose card theme:</span>
+				<p-selectButton [options]='cardBackImages' [(ngModel)]='cardBackImage' (onChange)='changeCardImage("preview", $event.value)'></p-selectButton>
+			</div>
+		</div>
+		<div class='row justify-content-center buffered-top'>
+			<img id='preview_card' src='' width='10%' height='10%'>
+		</div>
+		<!-- <div class='row justify-content-center'>
 			<div class="p-col-6 p-offset-3 p-lg-4 p-lg-offset-4 buffered-top">
 				<div class='p-grid p-justify-center'>
 					<div class='col-sm-3 clean'>
@@ -33,7 +42,7 @@
 					</div>
 				</div>
 			</div>
-		</div>
+		</div> -->
 
 		<div class='row justify-content-center buffered-top'>
 			<p-button class='buffered-top' (onClick)='readyUp()' label='{{readyButtonText}}'></p-button>
