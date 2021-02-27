@@ -13,7 +13,6 @@ Check out alllll the good details over [here on my website!](https://masonstooks
 1. Welcome screen on mobile:
     1. ![General](https://github.com/MasonStooksbury/Glof/blob/master/demo-pictures/welcome-screen.jpg)
     2. <img src="https://github.com/MasonStooksbury/Glof/blob/master/demo-pictures/welcome-screen.jpg" width="50%" height="50%">
-    3. <img src="https://github.com/MasonStooksbury/Glof/blob/master/demo-pictures/welcome-screen.jpg" width="400" height="600">
 2. Choose card back screen on mobile:
     1. ![Triggers](https://github.com/MasonStooksbury/Glof/blob/master/demo-pictures/choose-card-back.jpg)
 3. In-game on mobile:
