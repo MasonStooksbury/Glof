@@ -3,8 +3,8 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgModule } from '@angular/core';
 import { DialogModule } from 'primeng/dialog'
 import { ButtonModule } from 'primeng/button';
-import { PanelModule } from 'primeng/panel';
 import { SelectButtonModule } from 'primeng/selectbutton';
+import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -20,7 +20,7 @@ import { AppComponent } from './app.component';
     AppRoutingModule,
     DialogModule,
     ButtonModule,
-    PanelModule,
+    InputTextModule,
     SelectButtonModule,
     FormsModule
   ],

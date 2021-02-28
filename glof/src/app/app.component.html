@@ -1,63 +1,73 @@
 <div class='row justify-content-center'>
-	<!-- Main Menu -->
-	<p-panel *ngIf='!startGame'>
+	<!-- Lobby -->
+	<div *ngIf='lobby'>
 		<div class='row justify-content-center'>
-			<span>Welcome to the main menu, Player {{player_id}}!</span>
-			<span>Feel free to change your card theme.</span>
-			<span>When you're done, press "I'm ready!"</span>
-			<!-- <span>To start, press "I'm ready!"</span> -->
-			<button class='buffered-top' (click)='readyUp()'>{{readyButtonText}}</button>
-		</div>
-
-		<div class='row justify-content-center'>
-			<div class="p-col-6 p-offset-3 p-lg-4 p-lg-offset-4 buffered-top">
-				<div class='p-grid p-justify-center'>
-					<div class='col-sm-3 clean'>
-						<span>Choose card theme:</span>
-						<p-selectButton [options]='cardBackImages' [(ngModel)]='cardBackImage' (onChange)='changeCardImage("preview", $event.value)'></p-selectButton>
-					</div>
-					<div class='col-sm-3 buffered-left'>
-						<img id='preview_card' src='' width='100%' height='100%'>
-					</div>
-				</div>
+			<span><h2>Welcome to Glof!</h2></span>
+			<div class='col-md-6'>
+				<p-button class='buffered-top' (onClick)='openMainMenu()' label='Create Room'></p-button>
+				<span style='margin-top: .5em'>- or -</span>
+				<input #roomId type='text' maxlength='5' pInputText>
+				<p-button class='buffered-top' style='margin-left: 1em' (onClick)='joinRoom(roomId.value)' label='Join Room'></p-button>
 			</div>
 		</div>
-	</p-panel>
+	</div>
+
+
+
+	<!-- Main Menu -->
+	<div *ngIf='mainMenu'>
+		<div class='row justify-content-center'>
+			<span>Welcome to the main menu, Player {{player_id}}!</span>
+			<span *ngIf="player_id == '1'">Be sure to tell your friend you are in room: <b>{{roomId}}</b></span>
+		</div>
+
+		<div class='row justify-content-center buffered-top'>
+			<div class='col-sm-3'>
+				<span style='margin-bottom: 1em'>Choose card theme:</span>
+				<p-selectButton [options]='cardBackImages' [(ngModel)]='cardBackImage' (onChange)='changeCardImage("preview", $event.value)'></p-selectButton>
+			</div>
+		</div>
+		<div class='row justify-content-center buffered-top'>
+			<img id='preview_card' src='' sizes="(max-width: 500px) 80vw, (max-width: 900px) 50vw, 800px">
+		</div>
+
+		<div class='row justify-content-center buffered-top'>
+			<p-button class='buffered-top' (onClick)='readyUp()' label='{{readyButtonText}}'></p-button>
+		</div>
+	</div>
 
 
 
 	<!-- Game -->
-	<!-- <p-panel *ngIf='startGame'> -->
-	<p-panel [style.display]="startGame ? 'block' : 'none'">
-		<h3>Welcome, Player {{player_id}}!</h3>
+	<div [style.display]="startGame ? 'block' : 'none'">
 		<div class='row justify-content-center {{theirTurn}}'>
 			<!-- Other player's cards -->
-			<div class='p-col-6 p-offset-3 p-lg-4 p-lg-offset-4 buffered-top their-cards'>
+			<div class='p-col-6 p-offset-3 p-lg-4 p-lg-offset-4 buffered-top'>
 				<div class="p-grid p-justify-center">
 					<!-- 5 -->
-					<div class="p-col-3 p-lg-2">
+					<div class="card p-col-3 p-lg-2">
 						<img id='their_card_5' src='' width='100%' height='100%'>
 					</div>
 					<!-- 4 -->
-					<div class="p-col-3 p-lg-2 middle-card">
+					<div class="card p-col-3 p-lg-2 middle-card">
 						<img id='their_card_4' src='' width='100%' height='100%'>
 					</div>
 					<!-- 3 -->
-					<div class="p-col-3 p-lg-2">
+					<div class="card p-col-3 p-lg-2">
 						<img id='their_card_3' src='' width='100%' height='100%'>
 					</div>
 				</div>
 				<div class="p-grid p-justify-center buffered-top">
 					<!-- 2 -->
-					<div class="p-col-3 p-lg-2">
+					<div class="card p-col-3 p-lg-2">
 						<img id='their_card_2' src='' width='100%' height='100%'>
 					</div>
 					<!-- 1 -->
-					<div class="p-col-3 p-lg-2 middle-card">
+					<div class="card p-col-3 p-lg-2 middle-card">
 						<img id='their_card_1' src='' width='100%' height='100%'>
 					</div>
 					<!-- 0 -->
-					<div class="p-col-3 p-lg-2">
+					<div class="card p-col-3 p-lg-2">
 						<img id='their_card_0' src='' width='100%' height='100%'>
 					</div>
 				</div>
@@ -66,15 +76,15 @@
 		</div>
 		<div class='row justify-content-center'>
 			<!-- Draw/Discard piles -->
-			<div class='p-col-6 p-offset-3 p-lg-4 p-lg-offset-4 draw-discard-piles'>
+			<div class='p-col-6 p-offset-3 p-lg-4 p-lg-offset-4'>
 				<div class="p-grid p-justify-end">
 					<!-- Discard -->
-					<div class="p-col-3 p-lg-2 {{isDiscardSelected}}">
+					<div class="p-col-3 p-lg-2 discard-or-draw">
 						<a (click)='discardCard(); drawCardFromDiscardPile()'><img id='discard_card' src='' width='100%' height='100%'></a>
 						<label>Discard</label>
 					</div>
 					<!-- Draw -->
-					<div class="p-col-3 p-lg-2 {{isDrawSelected}} draw-pile">
+					<div class="p-col-3 p-lg-2 discard-or-draw draw-pile">
 						<a (click)='drawCardFromDrawPile()'><img id='draw_card' src='' width='100%' height='100%'></a>
 						<label>Draw</label>
 					</div>
@@ -84,44 +94,43 @@
 		</div>
 		<div class='row buffered-top justify-content-center {{myTurn}}'>
 			<!-- My cards -->
-			<div class='p-col-6 p-offset-3 p-lg-4 p-lg-offset-4 my-cards'>
+			<div class='p-col-6 p-offset-3 p-lg-4 p-lg-offset-4'>
 				<div class="p-grid p-justify-center">
-					<div class="p-col-3 p-lg-2">
-						<a (click)='chooseCard(0); replaceCard(0)'><img id='my_card_0' src='' width='100%' height='100%'></a>
+					<div class="card p-col-3 p-lg-2">
+						<a (click)='chooseCard(0)'><img id='my_card_0' src='' width='100%' height='100%'></a>
 					</div>
-					<div class="p-col-3 p-lg-2 middle-card">
-						<a (click)='chooseCard(1); replaceCard(1)'><img id='my_card_1' src='' width='100%' height='100%'></a>
+					<div class="card p-col-3 p-lg-2 middle-card">
+						<a (click)='chooseCard(1)'><img id='my_card_1' src='' width='100%' height='100%'></a>
 					</div>
-					<div class="p-col-3 p-lg-2">
-						<a (click)='chooseCard(2); replaceCard(2)'><img id='my_card_2' src='' width='100%' height='100%'></a>
+					<div class="card p-col-3 p-lg-2">
+						<a (click)='chooseCard(2)'><img id='my_card_2' src='' width='100%' height='100%'></a>
 					</div>
 				</div>
 				<div class="p-grid p-justify-center buffered-top">
-					<div class="p-col-3 p-lg-2">
-						<a (click)='chooseCard(3); replaceCard(3)'><img id='my_card_3' src='' width='100%' height='100%'></a>
+					<div class="card p-col-3 p-lg-2">
+						<a (click)='chooseCard(3)'><img id='my_card_3' src='' width='100%' height='100%'></a>
 					</div>
-					<div class="p-col-3 p-lg-2 middle-card">
-						<a (click)='chooseCard(4); replaceCard(4)'><img id='my_card_4' src='' width='100%' height='100%'></a>
+					<div class="card p-col-3 p-lg-2 middle-card">
+						<a (click)='chooseCard(4)'><img id='my_card_4' src='' width='100%' height='100%'></a>
 					</div>
-					<div class="p-col-3 p-lg-2">
-						<a (click)='chooseCard(5); replaceCard(5)'><img id='my_card_5' src='' width='100%' height='100%'></a>
+					<div class="card p-col-3 p-lg-2">
+						<a (click)='chooseCard(5)'><img id='my_card_5' src='' width='100%' height='100%'></a>
 					</div>
 				</div>
 			</div>
 		</div>
-	</p-panel>
+	</div>
 </div>
 
 
 
 <!-- A dialog of whether they won or lost -->
 <p-dialog header='{{headerMessage}}' [closable]='false' (onHide)='showDialog = false' [(visible)]='showDialog' [modal]='true' [blockScroll]='true'>
-	<!-- Insert meme here -->
-	<!-- <p-button></p-button> -->
-	<span>Player 1: {{player1Score}}</span>
-	<span>Player 2: {{player2Score}}</span>
-	<button *ngIf='!gameOver && player_id === "1"' class='buffered-top' (click)='reset("nextRound")'>Next Round</button>
-	<button *ngIf='gameOver && player_id === "1"' class='buffered-top' (click)='reset("newGame")'>New Game</button>
+	<span>Player 1: {{player1Score}}  {{player_id === '1' ? '(You)' : ''}}</span>
+	<span>Player 2: {{player2Score}}  {{player_id === '2' ? '(You)' : ''}}</span>
+	<p-button *ngIf='!gameOver && player_id === "1"' class='buffered-top' (onClick)='reset("nextRound")' label='Next Round'></p-button>
+	<p-button *ngIf='gameOver && player_id === "1"' class='buffered-top' (onClick)='reset("newGame")' label='New Game'></p-button>
+	<span *ngIf='gameOver && player_id === "2"' class='buffered-top'>Waiting for Player 1...</span>
 </p-dialog>
 
 <!-- Turn dialog -->

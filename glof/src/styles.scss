@@ -1,4 +1,10 @@
 /* You can add global styles to this file, and also import other style files */
+body {
+    background-color: #23272A;
+    color: #FFFFFF;
+    font-size: 1.25em;
+}
+
 .justify-content-center {
     text-align: center;
 }
@@ -9,10 +15,12 @@
 .buffered-bottom {
     margin-bottom: 1em;
 }
-.buffered-left {
-    margin-left: 1em;
-}
 
 span {
     display: block;
+}
+
+.ui-dialog.ui-widget-content {
+    background-color: #23272A;
+    color: #FFFFFF;
 }
