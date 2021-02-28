@@ -11,10 +11,10 @@ Check out alllll the good details over [here on my website!](https://masonstooks
 
 
 1. Welcome screen on mobile:
-    1. ![General](https://github.com/MasonStooksbury/Glof/blob/master/demo-pictures/welcome-screen.jpg)
+    1. ![welcome-screen](https://github.com/MasonStooksbury/Glof/blob/master/demo-pictures/welcome-screen.jpg)
 2. Choose card back screen on mobile:
-    1. ![Triggers](https://github.com/MasonStooksbury/Glof/blob/master/demo-pictures/choose-card-back.jpg)
+    1. ![choose-card-back](https://github.com/MasonStooksbury/Glof/blob/master/demo-pictures/choose-card-back.jpg)
 3. In-game on mobile:
-    1. ![Actions](https://github.com/MasonStooksbury/Glof/blob/master/demo-pictures/phone-example.jpg)
+    1. ![phone-exampl](https://github.com/MasonStooksbury/Glof/blob/master/demo-pictures/phone-example.jpg)
 4. In-game on desktop:
-    1. ![Conditions](https://github.com/MasonStooksbury/Glof/blob/master/demo-pictures/glof-demo-new.jpg)
+    1. ![glof-demo-new](https://github.com/MasonStooksbury/Glof/blob/master/demo-pictures/glof-demo-new.png)
