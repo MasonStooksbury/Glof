@@ -133,8 +133,6 @@ export class AppComponent implements OnInit, AfterViewInit, AfterViewChecked {
 		this.socket.on('notifyTurn', data => {
 			// console.log(`show dialog ${this.showTurnDialog}`);
 			// console.log(`notifyTurn: ${data}`);
-			// this.headerMessage = data;
-			// this.showTurnDialog = true;
 			this.myTurn = 'is-turn';
 			this.theirTurn = '';
 		})

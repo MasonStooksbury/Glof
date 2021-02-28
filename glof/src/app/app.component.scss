@@ -2,7 +2,7 @@
     padding: 1em;
 }
 
-.card.p-col-3 {
+.card.p-col-3.p-lg-2 {
     padding: 0;
     border: 1px solid black;
     border-radius: .75em;
@@ -13,42 +13,13 @@
     }
 }
 
-// .p-col-3.discard-or-draw {
-//     padding: 0;
-//     margin-top: 1em;
-//     a {
-//         display:inline-block;
-//         width:100%;
-//         height:100%;
-//         border-radius: .75em;
-//         border: 1px solid black;
-//         overflow: hidden;
-//         &:hover {
-//             box-shadow: 0 0 3px 3px fuchsia;
-//         }
-//     }
-// }
-
-.p-lg-2 {
-    padding: 0;
-    border-radius: .75em;
-    border: 1px solid black;
-    margin-top: 1em;
-    &:hover {
-        box-shadow: 0 0 3px 3px fuchsia;
-    }
-    label {
-        font-size: 1em;
-    }
-}
-
-.p-lg-2.discard-or-draw {
+.p-col-3.p-lg-2.discard-or-draw {
     padding: 0;
     margin-top: 1em;
     a {
         display:inline-block;
         width:100%;
-        height:100%;
+        height:85%;
         border-radius: .75em;
         border: 1px solid black;
         overflow: hidden;
@@ -82,6 +53,11 @@
 
 .is-turn {
     background-color: #7289DA;
+}
+
+// Used by the score dialog to bold which player the client is
+.bold {
+    font-weight: bold;
 }
 
 

@@ -42,7 +42,7 @@
 	<div [style.display]="startGame ? 'block' : 'none'">
 		<div class='row justify-content-center {{theirTurn}}'>
 			<!-- Other player's cards -->
-			<div class='p-col-6 p-offset-3 p-lg-4 p-lg-offset-4 buffered-top their-cards'>
+			<div class='p-col-6 p-offset-3 p-lg-4 p-lg-offset-4 buffered-top'>
 				<div class="p-grid p-justify-center">
 					<!-- 5 -->
 					<div class="card p-col-3 p-lg-2">
@@ -76,10 +76,10 @@
 		</div>
 		<div class='row justify-content-center'>
 			<!-- Draw/Discard piles -->
-			<div class='p-col-6 p-offset-3 p-lg-4 p-lg-offset-4 draw-discard-piles'>
+			<div class='p-col-6 p-offset-3 p-lg-4 p-lg-offset-4'>
 				<div class="p-grid p-justify-end">
 					<!-- Discard -->
-					<div class="p-col-3 p-lg-2 p-sm-2 discard-or-draw">
+					<div class="p-col-3 p-lg-2 discard-or-draw">
 						<a (click)='discardCard(); drawCardFromDiscardPile()'><img id='discard_card' src='' width='100%' height='100%'></a>
 						<label>Discard</label>
 					</div>
@@ -94,7 +94,7 @@
 		</div>
 		<div class='row buffered-top justify-content-center {{myTurn}}'>
 			<!-- My cards -->
-			<div class='p-col-6 p-offset-3 p-lg-4 p-lg-offset-4 my-cards'>
+			<div class='p-col-6 p-offset-3 p-lg-4 p-lg-offset-4'>
 				<div class="p-grid p-justify-center">
 					<div class="card p-col-3 p-lg-2">
 						<a (click)='chooseCard(0)'><img id='my_card_0' src='' width='100%' height='100%'></a>
@@ -126,8 +126,8 @@
 
 <!-- A dialog of whether they won or lost -->
 <p-dialog header='{{headerMessage}}' [closable]='false' (onHide)='showDialog = false' [(visible)]='showDialog' [modal]='true' [blockScroll]='true'>
-	<span>Player 1: {{player1Score}}</span>
-	<span>Player 2: {{player2Score}}</span>
+	<span>Player 1: {{player1Score}}  {{player_id === '1' ? '(You)' : ''}}</span>
+	<span>Player 2: {{player2Score}}  {{player_id === '2' ? '(You)' : ''}}</span>
 	<p-button *ngIf='!gameOver && player_id === "1"' class='buffered-top' (onClick)='reset("nextRound")' label='Next Round'></p-button>
 	<p-button *ngIf='gameOver && player_id === "1"' class='buffered-top' (onClick)='reset("newGame")' label='New Game'></p-button>
 	<span *ngIf='gameOver && player_id === "2"' class='buffered-top'>Waiting for Player 1...</span>
