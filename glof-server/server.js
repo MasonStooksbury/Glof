@@ -13,6 +13,7 @@ io.on('connection', (socket) => {
     socket.on('joinRoom', (data) => {
         room = io.sockets.adapter.rooms[data.room];
 
+        // The joining player passes in a string (helpful on the client end) but we need a number
         if (typeof(data.room) === 'string') {
             data.room = parseInt(data.room)
         }
@@ -55,6 +56,7 @@ io.on('connection', (socket) => {
     socket.on('playerReadyUp', (data) => {
         room = io.sockets.adapter.rooms[data.room];
         room.socketReference = socket;
+        // Set this socket to "ready"
         room.player_array.find(player => player.socketId === socket.id).isReady = true;
 
         // When both players are ready, start the main game and send the discard card
@@ -148,7 +150,7 @@ io.on('connection', (socket) => {
 
             }
             // Or if their action was to discard a card
-            // I know, I know "mAsOn ThErE aRe OnLy ThReE oPtIoNs. JuSt UsE aN eLsE", I get it
+            // I know, I know "mAsOn ThErE aRe OnLy ThReE oPtIoNs. JuSt UsE aN eLsE", I get it.
             //      Really the only reason I did this was for clarity; you're welcome
             else if (data.action === 'discard') {
                 // console.log('card discarded');
@@ -191,8 +193,8 @@ io.on('connection', (socket) => {
 
         // Kick remaining player back to the lobby so they can start a new game or quit
         toEveryoneInRoom(room_id, 'kickToLobby');
-        console.log(room);
-        // Kick everyone out of the room
+        // console.log(room);
+        // Kick everyone out of the room (I tried several different ways of doing this, and this was the most bulletproof)
         try {
             room.player1.socket.leave(room_id);
         } catch (e) {
@@ -296,11 +298,16 @@ function endGame(room, room_id) {
     toSpecificSocket({id: room.player1.socketId, method: 'revealCards', message: {yours: room.player1.cards, theirs: room.player2.cards}});
     toSpecificSocket({id: room.player2.socketId, method: 'revealCards', message: {yours: room.player2.cards, theirs: room.player1.cards}});
 
+    // If player 1 won
     if ((room.player1.score < room.player2.score && room.player1.score <= -100) || (room.player1.score < room.player2.score && room.player2.score >= 100)) {
         toEveryoneInRoom(room_id, 'announceWinner', {message: 'Player 1 Wins!', p1Score: room.player1.score, p2Score: room.player2.score})
-    } else if ((room.player2.score < room.player1.score && room.player2.score <= -100) || (room.player2.score < room.player1.score && room.player1.score >= 100)) {
+    } 
+    // If player 2 won
+    else if ((room.player2.score < room.player1.score && room.player2.score <= -100) || (room.player2.score < room.player1.score && room.player1.score >= 100)) {
         toEveryoneInRoom(room_id, 'announceWinner', {message: 'Player 2 Wins!', p1Score: room.player1.score, p2Score: room.player2.score})
-    } else {
+    }
+    // Otherwise, there is no winner and we can progress to the next round
+    else {
         toEveryoneInRoom(room_id, 'roundSummary', {message: 'Round Summary', p1Score: room.player1.score, p2Score: room.player2.score});
     }
 }
@@ -314,7 +321,6 @@ function endGame(room, room_id) {
 //      all of the ones I use
 
 function toEveryoneInRoom(room, method, data) {
-    // io.emit(method, data);
     // console.log(room);
     io.in(room).emit(method, data);
 }
@@ -323,6 +329,9 @@ function toSpecificSocket(data) {
     io.to(data.id).emit(data.method, data.message);
 }
 
+
+
+// This function is used when someone clicks "Create Room"
 function setUpRoom(roomId) {
     room = io.sockets.adapter.rooms[roomId];
     // The available deck of cards plus both Jokers (Z1 and Z2)
@@ -356,7 +365,9 @@ function setUpRoom(roomId) {
 
 // Shuffle the deck and give everyone their 6 cards from the top of the draw_pile
 function shuffleDeckAndAssign(room) {
+    // Create a deep copy of the cards (so we don't overwrite them)
     room.draw_pile = [...room.cards];
+    // Shuffle them and fill the draw pile
     for(let i = room.draw_pile.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * i)
         const temp = room.draw_pile[i]
@@ -370,6 +381,7 @@ function shuffleDeckAndAssign(room) {
     // console.log('draw');
     // console.log(draw_pile);
 
+    // From the top of the draw pile, assign each player their 6 cards
     for(let i = 0; i < 6; i++) {
         room.player1.cards[i] = room.draw_pile.shift();
         room.player2.cards[i] = room.draw_pile.shift();

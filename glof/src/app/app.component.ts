@@ -68,13 +68,14 @@ export class AppComponent implements OnInit, AfterViewInit, AfterViewChecked {
 	}
 
 	public ngAfterViewInit() {
+		// Once client creates or joins a room
 		this.socket.on('clientConnection', data => {
 			this.mainMenu = true;
 			this.lobby = false;
 			this.message = data.message;
 			this.player_id = data.player_id;
-			// this.changeCardImage('preview', this.cardBackImage);
 		})
+		// Once Player 1 has started the game and the server approves
 		this.socket.on('startGame', data => {
 			this.initializeAllCards(this.cardBackImage);
 			this.mainMenu = false;
@@ -85,14 +86,17 @@ export class AppComponent implements OnInit, AfterViewInit, AfterViewChecked {
 			// Once the game has started, allow the players to pick two cards
 			this.chooseTwoPhase = true;
 		})
+		// Begin actual play after players have chosen their two cards to flip up
 		this.socket.on('startTurns', data => {
 			this.chooseTwoPhase = false;
 			this.turnsPhase = true;
 		})
+		// Receive a card from the server
 		this.socket.on('receiveCard', data => {
 			this.my_cards[data.index] = data.card;
 			this.changeCardImage('my', `assets/Fronts/${data.card}.png`, data.index);
 		})
+		// Receive opponent's cards in order to display them
 		this.socket.on('receiveOtherCards', data => {
 			// Set their display deck to what I got from the server
 			// console.log(`OTHER: ${data}`);
@@ -103,6 +107,7 @@ export class AppComponent implements OnInit, AfterViewInit, AfterViewChecked {
 				}
 			});
 		})
+		// Receive updates on my cards from the server
 		this.socket.on('updateCards', data => {
 			this.my_cards = [...data];
 			// console.log(`MINE: ${this.my_cards}`);
@@ -112,6 +117,7 @@ export class AppComponent implements OnInit, AfterViewInit, AfterViewChecked {
 				}
 			});
 		})
+		// Receive the card from the top of the draw pile
 		this.socket.on('receiveDrawCard', data => {
 			// console.log(`draw card: ${data}`);
 			this.topDrawCard = data;
@@ -152,9 +158,11 @@ export class AppComponent implements OnInit, AfterViewInit, AfterViewChecked {
 			this.player2Score = data.p2Score;
 			this.showDialog = true;
 		})
+		// Flip up all remaining face-down cards
 		this.socket.on('revealCards', data => {
 			this.revealAllCards(data.yours, data.theirs);
 		})
+		// Show scores at the end of the round
 		this.socket.on('roundSummary', data => {
 			// console.log('round summary');
 			this.headerMessage = data.message;
@@ -162,6 +170,7 @@ export class AppComponent implements OnInit, AfterViewInit, AfterViewChecked {
 			this.player2Score = data.p2Score;
 			this.showDialog = true;
 		})
+		// Reset before next round
 		this.socket.on('nextRoundStart', data => {
 			// console.log('next round');
 			this.showDialog = false;
@@ -177,6 +186,7 @@ export class AppComponent implements OnInit, AfterViewInit, AfterViewChecked {
 			// console.log(`show dialog card: ${this.showDialog}`);
 			// console.log(`choose2 card: ${this.chooseTwoPhase}`);
 		})
+		// Reset before new game
 		this.socket.on('nextGameStart', data => {
 			// console.log('next game!');
 			this.initializeAllCards(this.cardBackImage);
@@ -223,6 +233,8 @@ export class AppComponent implements OnInit, AfterViewInit, AfterViewChecked {
 		})
 	}
 
+	// This has to use this lifecycle hook in order to avoid changing a variable
+	//		while it is still null
 	public ngAfterViewChecked() {
 		this.changeCardImage('preview', this.cardBackImage);
 	}
