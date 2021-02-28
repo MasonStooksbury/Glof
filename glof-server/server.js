@@ -33,7 +33,7 @@ io.on('connection', (socket) => {
 
         // Save the socket reference 
         io.sockets.adapter.rooms[data.room].socketReference = socket;
-        console.log(data.room);
+        // console.log(data.room);
 
         // Assign players as they connect
         if (room.player1.socketId === '') {
