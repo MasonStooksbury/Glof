@@ -5,8 +5,8 @@ const Http = require('http').Server(Express);
 const io = require('socket.io')(Http);
 const cors = require('cors');
 
-Http.listen(443, () => {
-    console.log('Listening at :443...');
+Http.listen(8080, 'ec2-3-128-201-226.us-east-2.compute.amazonaws.com', () => {
+    console.log('Listening at :8080...');
 });
 
 Express.use(cors());
