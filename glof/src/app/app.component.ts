@@ -64,16 +64,17 @@ export class AppComponent implements OnInit, AfterViewInit, AfterViewChecked {
 	public ngOnInit() {
 		// this.socket = io('http://localhost:709');
 		// this.socket = io('stlouis5.cubehostingmc.com');
-		this.socket = io('stlouis5.cubehostingmc.com', {
-			withCredentials: true,
-			transportOptions: {
-				polling: {
-					extraHeaders: {
-						"Access-Control-Allow-Origin": "*"
-					}
-				}
-			}
-		});
+		this.socket = io('stlouis5.cubehostingmc.com:24698', { transport : ['websocket'] });
+		// this.socket = io('stlouis5.cubehostingmc.com', {
+		// 	withCredentials: true,
+		// 	transportOptions: {
+		// 		polling: {
+		// 			extraHeaders: {
+		// 				"Access-Control-Allow-Origin": "*"
+		// 			}
+		// 		}
+		// 	}
+		// });
 		this.roomId = Math.floor(Math.random()*(99999-10000+1)+10000);
 	}
 
