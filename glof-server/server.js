@@ -6,10 +6,8 @@ const io = require('socket.io')(Http);
 const cors = require('cors');
 
 
-
-
-Http.listen(24698, () => {
-    console.log('Listening at :24698...');
+Http.listen(709, () => {
+    console.log('Listening at :709...');
 });
 
 Express.use(cors());
