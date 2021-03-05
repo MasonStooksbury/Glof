@@ -3,17 +3,6 @@
 const Express = require('express')();
 const Http = require('http').Server(Express);
 const io = require('socket.io')(Http);
-// const io = require('socket.io')(Http, {
-//     handlePreflightRequest: (req, res) => {
-//         const headers = {
-//             "Access-Control-Allow-Headers": "Content-Type, Authorization",
-//             "Access-Control-Allow-Origin": "glof.masonstooksbury.com",
-//             "Access-Control-Allow-Credentials": true
-//         };
-//         res.writeHead(200, headers);
-//         res.end();
-//     }
-// });
 const cors = require('cors');
 
 
