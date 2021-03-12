@@ -22,7 +22,8 @@ Check out alllll the good details over [here on my website!](https://masonstooks
     1. ![glof-demo-new](https://github.com/MasonStooksbury/Glof/blob/master/demo-pictures/glof-demo-new.png)
 
 
-Until I find a solid hosting solution, here are the instructions for installing and playing on your own local network:
+# Install
+### Until I find a solid hosting solution, here are the instructions for installing and playing on your own local network:
 - Clone the project
 - Download Node.js ![from here](https://nodejs.org/en/download/)
 - Download Angular CLI by opening a terminal and running: *npm install -g @angular/cli*
