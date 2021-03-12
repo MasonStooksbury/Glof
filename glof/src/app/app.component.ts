@@ -62,8 +62,7 @@ export class AppComponent implements OnInit, AfterViewInit, AfterViewChecked {
 	constructor() { }
 
 	public ngOnInit() {
-		// this.socket = io('http://192.168.1.64:709');
-		this.socket = io("stlouis5.cubehostingmc.com:24698", {transport: ['websocket', 'polling']});
+		this.socket = io('http://192.168.1.64:709');
 		this.roomId = Math.floor(Math.random()*(99999-10000+1)+10000);
 	}
 
